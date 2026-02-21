@@ -8,7 +8,7 @@ LOGIN_HTML = r"""<!DOCTYPE html>
 <title>MANTIS // Login</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><path d='M60 28L48 42L72 42Z' fill='%23f59e0b'/><path d='M55 30Q45 12 30 6' stroke='%23f59e0b' stroke-width='3' fill='none'/><path d='M65 30Q75 12 90 6' stroke='%23f59e0b' stroke-width='3' fill='none'/><ellipse cx='60' cy='52' rx='8' ry='7' fill='%23f59e0b'/><path d='M54 58Q52 75 50 98Q60 104 70 98Q68 75 66 58Z' fill='%23f59e0b'/><path d='M54 46L36 34L24 44L34 50' stroke='%23f59e0b' stroke-width='3' fill='none'/><path d='M66 46L84 34L96 44L86 50' stroke='%23f59e0b' stroke-width='3' fill='none'/></svg>">
 <style>
-:root { --bg: #0c0c0c; --card: #161616; --border: #2a2a2a; --text: #e8e0d0; --dim: #8a7e6a; --accent: #f59e0b; --red: #ef4444; }
+:root { --bg: #08090a; --card: #141517; --border: #1e2024; --text: #e2e4e8; --dim: #6b7280; --accent: #f59e0b; --red: #ef4444; }
 * { margin:0; padding:0; box-sizing:border-box; }
 body { font-family:'SF Mono','Fira Code','Consolas',monospace; background:var(--bg); color:var(--text); display:flex; align-items:center; justify-content:center; min-height:100vh; }
 .login-box { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:40px; width:380px; text-align:center; }
@@ -16,7 +16,7 @@ body { font-family:'SF Mono','Fira Code','Consolas',monospace; background:var(--
 .login-box .sub { color:var(--dim); font-size:11px; margin-bottom:28px; }
 .login-box input { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:12px 16px; border-radius:6px; font-family:inherit; font-size:14px; margin-bottom:16px; text-align:center; }
 .login-box input:focus { outline:none; border-color:var(--accent); }
-.login-box button { width:100%; background:var(--accent); color:#0c0c0c; border:none; padding:12px; border-radius:6px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; }
+.login-box button { width:100%; background:var(--accent); color:#08090a; border:none; padding:12px; border-radius:6px; font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; }
 .login-box button:hover { background:#fbbf24; }
 .error { color:var(--red); font-size:12px; margin-bottom:12px; display:none; }
 </style>
@@ -63,12 +63,12 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 :root {
-    --bg-primary: #0c0c0c;
-    --bg-secondary: #121212;
-    --bg-card: #161616;
-    --border: #2a2a2a;
-    --text-primary: #e8e0d0;
-    --text-secondary: #8a7e6a;
+    --bg-primary: #08090a;
+    --bg-secondary: #0f1012;
+    --bg-card: #141517;
+    --border: #1e2024;
+    --text-primary: #e2e4e8;
+    --text-secondary: #6b7280;
     --accent: #f59e0b;
     --red: #ef4444;
     --orange: #f59e0b;
@@ -76,7 +76,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
     --purple: #8b5cf6;
     --cyan: #06b6d4;
     --pink: #ec4899;
-    --mantis-glow: rgba(245, 158, 11, 0.12);
+    --mantis-glow: rgba(245, 158, 11, 0.10);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: var(--bg-primary); color: var(--text-primary); overflow-x: hidden; }
@@ -118,7 +118,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 
 /* Overview mini map */
 #map { height: 300px; background: var(--bg-secondary); border-radius: 4px; }
-.leaflet-container { background: #0c0c0c !important; }
+.leaflet-container { background: #08090a !important; }
 
 /* Full map tab */
 .map-tab-layout { display: grid; grid-template-columns: 1fr 320px; gap: 16px; height: calc(100vh - 110px); }
@@ -209,7 +209,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 .filter-group label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
 .filter-group select, .filter-group input { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 5px 10px; border-radius: 4px; font-size: 12px; font-family: inherit; }
 .filter-group select:focus, .filter-group input:focus { outline: none; border-color: var(--accent); }
-.filter-btn { background: var(--accent); color: #0c0c0c; border: none; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; }
+.filter-btn { background: var(--accent); color: #08090a; border: none; padding: 5px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; }
 .filter-btn:hover { background: #fbbf24; }
 .filter-btn.secondary { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary); }
 .filter-btn.secondary:hover { border-color: var(--accent); color: var(--text-primary); }
@@ -239,7 +239,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 .toggle-switch.on { background: var(--accent); }
 .toggle-switch::after { content: ''; position: absolute; width: 18px; height: 18px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: left 0.2s; }
 .toggle-switch.on::after { left: 20px; }
-.config-apply { background: var(--accent); color: #0c0c0c; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; margin-top: 8px; }
+.config-apply { background: var(--accent); color: #08090a; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; margin-top: 8px; }
 .config-apply:hover { background: #fbbf24; }
 .config-section { margin-bottom: 24px; }
 .config-section-title { font-size: 13px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
@@ -247,7 +247,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 .config-toolbar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .config-toolbar button { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); padding: 8px 16px; border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .config-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
-.config-toolbar button.primary { background: var(--accent); color: #0c0c0c; border-color: var(--accent); }
+.config-toolbar button.primary { background: var(--accent); color: #08090a; border-color: var(--accent); }
 .config-toolbar button.primary:hover { background: #fbbf24; }
 .config-advanced { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 12px; display: none; }
 .config-advanced.open { display: block; }
@@ -275,7 +275,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 /* Toast */
 .toast-container { position: fixed; top: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
 .toast { padding: 12px 20px; border-radius: 6px; font-size: 13px; animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 4.7s forwards; pointer-events: none; max-width: 400px; }
-.toast.success { background: rgba(245, 158, 11, 0.95); color: #0c0c0c; font-weight: 600; }
+.toast.success { background: rgba(245, 158, 11, 0.95); color: #08090a; font-weight: 600; }
 .toast.error { background: rgba(239, 68, 68, 0.9); color: white; }
 @keyframes toastIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
@@ -411,8 +411,8 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
         <svg width="30" height="30" viewBox="0 0 120 120" style="vertical-align:middle;margin-right:10px" fill="none">
             <!-- Head — triangular with compound eyes -->
             <path d="M60 28 L48 42 L72 42 Z" fill="#f59e0b" opacity="0.9"/>
-            <circle cx="53" cy="36" r="3" fill="#0c0c0c"/>
-            <circle cx="67" cy="36" r="3" fill="#0c0c0c"/>
+            <circle cx="53" cy="36" r="3" fill="#08090a"/>
+            <circle cx="67" cy="36" r="3" fill="#08090a"/>
             <!-- Antennae — swept back -->
             <path d="M55 30 Q45 12 30 6" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" fill="none"/>
             <path d="M65 30 Q75 12 90 6" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" fill="none"/>
@@ -423,9 +423,9 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
             <!-- Abdomen — elongated -->
             <path d="M54 58 Q52 75 50 98 Q60 104 70 98 Q68 75 66 58 Z" fill="#f59e0b" opacity="0.75"/>
             <!-- Segments on abdomen -->
-            <line x1="53" y1="68" x2="67" y2="68" stroke="#0c0c0c" stroke-width="0.8" opacity="0.4"/>
-            <line x1="52" y1="78" x2="68" y2="78" stroke="#0c0c0c" stroke-width="0.8" opacity="0.4"/>
-            <line x1="51" y1="88" x2="69" y2="88" stroke="#0c0c0c" stroke-width="0.8" opacity="0.4"/>
+            <line x1="53" y1="68" x2="67" y2="68" stroke="#08090a" stroke-width="0.8" opacity="0.4"/>
+            <line x1="52" y1="78" x2="68" y2="78" stroke="#08090a" stroke-width="0.8" opacity="0.4"/>
+            <line x1="51" y1="88" x2="69" y2="88" stroke="#08090a" stroke-width="0.8" opacity="0.4"/>
             <!-- Raptorial forelegs — the iconic praying mantis arms -->
             <path d="M54 46 L36 34 L24 44 L34 50" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
             <path d="M66 46 L84 34 L96 44 L86 50" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -445,10 +445,10 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
             <path d="M62 48 Q78 52 84 64 Q72 60 64 54 Z" fill="#f59e0b" opacity="0.12"/>
         </svg>
         <span style="color:#f59e0b;font-weight:800;letter-spacing:3px">MANTIS</span>
-        <span style="color:#8a7e6a;font-weight:400;font-size:12px;margin-left:8px">// threat intelligence</span>
+        <span style="color:#6b7280;font-weight:400;font-size:12px;margin-left:8px">// threat intelligence</span>
     </h1>
     <div class="status">
-        <span style="color:#8a7e6a;font-size:11px;margin-right:12px">WATCH. WAIT. CAPTURE.</span>
+        <span style="color:#6b7280;font-size:11px;margin-right:12px">WATCH. WAIT. CAPTURE.</span>
         <div class="dot" id="wsDot"></div>
         <span id="wsStatus">Connecting...</span>
     </div>
@@ -640,10 +640,14 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
     </div>
     <button class="filter-btn" onclick="loadSessionsTab()">Apply</button>
 </div>
+<div class="bulk-bar" id="sessBulkBar" style="display:none">
+    <button class="filter-btn danger" onclick="confirmDeleteSelectedSessions()">Delete Selected (<span id="sessSelCount">0</span>)</button>
+    <button class="filter-btn secondary" onclick="clearSessSelection()">Clear Selection</button>
+</div>
 <div class="card">
     <div class="events-scroll" style="max-height:600px">
         <table class="event-table">
-            <thead><tr><th>Session ID</th><th>Service</th><th>Source IP</th><th>Port</th><th>Started</th><th>Ended</th></tr></thead>
+            <thead><tr><th style="width:30px"><input type="checkbox" id="sessSelectAll" onchange="toggleSelectAllSessions()"></th><th>Session ID</th><th>Service</th><th>Source IP</th><th>Port</th><th>Started</th><th>Ended</th></tr></thead>
             <tbody id="sessTabBody"></tbody>
         </table>
     </div>
@@ -691,6 +695,10 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
     </div>
     <button class="filter-btn" onclick="loadAlertsTab()">Apply</button>
     <button class="filter-btn secondary" onclick="bulkAckAlerts()">Ack All Visible</button>
+</div>
+<div class="bulk-bar" id="alertBulkBar" style="display:none">
+    <button class="filter-btn danger" onclick="confirmDeleteSelectedAlerts()">Delete Selected (<span id="alertSelCount">0</span>)</button>
+    <button class="filter-btn secondary" onclick="clearAlertSelection()">Clear Selection</button>
 </div>
 <div class="card">
     <div class="alerts-scroll" style="max-height:600px" id="alertsTabPanel"></div>
@@ -749,6 +757,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
         </div>
     </div>
     <div class="pi-header-actions">
+        <button onclick="openPayloadScanModal()">&#x1F50D; Scan Database</button>
         <button onclick="loadPayloadIntel()">&#x21BB; Refresh</button>
         <button onclick="exportTable('alerts','json')">&#x2913; Export</button>
     </div>
@@ -874,13 +883,19 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
     <button class="filter-btn" onclick="loadDatabaseTab()">Search</button>
     <button class="filter-btn secondary" onclick="exportDBResults('json')">Export JSON</button>
     <button class="filter-btn secondary" onclick="exportDBResults('csv')">Export CSV</button>
+    <button class="filter-btn danger" onclick="confirmDeleteFilteredEvents()" title="Delete all events matching current filters">Delete Matching</button>
     <button class="filter-btn danger" onclick="confirmResetDB()">Reset Database</button>
+</div>
+<div class="bulk-bar" id="dbBulkBar" style="display:none">
+    <button class="filter-btn danger" onclick="confirmDeleteSelectedEvents()">Delete Selected (<span id="dbSelCount">0</span>)</button>
+    <button class="filter-btn secondary" onclick="clearDbSelection()">Clear Selection</button>
 </div>
 <div class="card">
     <div class="card-header"><span id="dbResultCount">0 results</span></div>
     <div class="events-scroll" style="max-height:600px">
         <table class="event-table" id="dbTable">
             <thead><tr>
+                <th style="width:30px"><input type="checkbox" id="dbSelectAll" onchange="toggleSelectAllEvents()"></th>
                 <th style="cursor:pointer" onclick="dbSort('id')">ID</th>
                 <th style="cursor:pointer" onclick="dbSort('timestamp')">Time</th>
                 <th style="cursor:pointer" onclick="dbSort('service')">Service</th>
@@ -1093,7 +1108,7 @@ function buildPopupHTML(d) {
     const ip = d.ip || '?';
     const isBlocked = blockedIPs.has(ip);
     const blockBtn = isBlocked
-        ? `<button onclick="unblockIP('${ip}')" style="background:var(--green);color:#0c0c0c;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;width:100%">Unblock IP</button>`
+        ? `<button onclick="unblockIP('${ip}')" style="background:var(--green);color:#08090a;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;width:100%">Unblock IP</button>`
         : `<button onclick="blockIP('${ip}')" style="background:var(--red);color:white;border:none;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;width:100%">Block IP</button>`;
     return `<div class="popup-ip">${ip}${isBlocked ? ' <span style="color:var(--red);font-size:10px">BLOCKED</span>' : ''}</div>
         <div class="popup-loc">${[d.city, d.country].filter(Boolean).join(', ') || 'Unknown location'}</div>
@@ -1225,8 +1240,8 @@ function drawDonut(canvasId, legendId, dataMap, colorMap) {
         ctx.fill();
         angle += slice;
     });
-    ctx.beginPath(); ctx.arc(cx, cy, ir - 1, 0, Math.PI * 2); ctx.fillStyle = '#161616'; ctx.fill();
-    ctx.fillStyle = '#e8e0d0'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.beginPath(); ctx.arc(cx, cy, ir - 1, 0, Math.PI * 2); ctx.fillStyle = '#141517'; ctx.fill();
+    ctx.fillStyle = '#e2e4e8'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(total, cx, cy);
     const legend = document.getElementById(legendId);
     if (legend) legend.innerHTML = entries.map(([k,v]) => `<div class="chart-legend-item"><div class="chart-legend-color" style="background:${colorMap[k]||'#666'}"></div>${k}: ${v} (${Math.round(v/total*100)}%)</div>`).join('');
@@ -1317,12 +1332,14 @@ async function loadSessionsTab() {
         const sessions = await apiFetch(url);
         const tbody = document.getElementById('sessTabBody');
         tbody.innerHTML = '';
+        document.getElementById('sessSelectAll').checked = false;
         sessions.forEach(s => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td title="${s.id}">${s.id.substring(0,8)}...</td><td><span class="badge badge-${s.service}">${s.service}</span></td><td>${ipHTML(s.src_ip)}</td><td>${s.dst_port}</td><td>${formatDateTime(s.started_at)}</td><td>${s.ended_at ? formatDateTime(s.ended_at) : '<span style="color:var(--green)">active</span>'}</td>`;
+            tr.innerHTML = `<td onclick="event.stopPropagation()"><input type="checkbox" class="sess-row-cb" value="${s.id}" onchange="updateDeleteSelectedSessionsBtn()"></td><td title="${s.id}">${s.id.substring(0,8)}...</td><td><span class="badge badge-${s.service}">${s.service}</span></td><td>${ipHTML(s.src_ip)}</td><td>${s.dst_port}</td><td>${formatDateTime(s.started_at)}</td><td>${s.ended_at ? formatDateTime(s.ended_at) : '<span style="color:var(--green)">active</span>'}</td>`;
             tr.onclick = () => showSessionDetail(s);
             tbody.appendChild(tr);
         });
+        updateDeleteSelectedSessionsBtn();
         document.getElementById('sessPrev').disabled = sessOffset === 0;
         document.getElementById('sessNext').disabled = sessions.length < sessLimit;
         document.getElementById('sessPageInfo').textContent = `Page ${Math.floor(sessOffset/sessLimit)+1}`;
@@ -1355,10 +1372,11 @@ async function loadAlertsTab() {
             const div = document.createElement('div');
             div.className = 'alert-item';
             const tabIocBadge = (al.data && al.data.iocs) ? (() => { const c = Object.values(al.data.iocs).reduce((s,a) => s+a.length, 0); return c ? `<span class="badge badge-ioc">${c} IOC${c>1?'s':''}</span>` : ''; })() : '';
-            div.innerHTML = `<span class="badge badge-${al.severity}">${al.severity}</span>${tabIocBadge}<div class="alert-msg">${esc(al.message||al.rule_name)}</div><span class="alert-time">${formatTime(al.timestamp)}</span>${al.acknowledged?'<span style="color:var(--green);font-size:10px">ACK</span>':'<button class="alert-ack" onclick="event.stopPropagation();ackAlertTab('+al.id+')">ACK</button>'}`;
+            div.innerHTML = `<span onclick="event.stopPropagation()" style="flex-shrink:0"><input type="checkbox" class="alert-row-cb" value="${al.id}" onchange="updateDeleteSelectedAlertsBtn()"></span><span class="badge badge-${al.severity}">${al.severity}</span>${tabIocBadge}<div class="alert-msg">${esc(al.message||al.rule_name)}</div><span class="alert-time">${formatTime(al.timestamp)}</span>${al.acknowledged?'<span style="color:var(--green);font-size:10px">ACK</span>':'<button class="alert-ack" onclick="event.stopPropagation();ackAlertTab('+al.id+')">ACK</button>'}`;
             div.onclick = () => showAlertDetail(al);
             panel.appendChild(div);
         });
+        updateDeleteSelectedAlertsBtn();
         document.getElementById('alertPrev').disabled = alertOffset === 0;
         document.getElementById('alertNext').disabled = alerts.length < alertLimit;
         document.getElementById('alertPageInfo').textContent = `Page ${Math.floor(alertOffset/alertLimit)+1}`;
@@ -1415,13 +1433,15 @@ async function loadDatabaseTab() {
 function renderDBTable() {
     const tbody = document.getElementById('dbTabBody');
     tbody.innerHTML = '';
+    document.getElementById('dbSelectAll').checked = false;
     dbResults.forEach(ev => {
         const tr = document.createElement('tr');
         const s = ev.service || '';
-        tr.innerHTML = `<td>${ev.id}</td><td>${formatTime(ev.timestamp)}</td><td><span class="badge badge-${s}">${s}</span></td><td>${ipHTML(ev.src_ip)}</td><td>${ev.event_type||''}</td><td title="${esc(summarize(ev.data))}">${esc(summarize(ev.data))}${threatBadges(ev.data)}</td>`;
+        tr.innerHTML = `<td onclick="event.stopPropagation()"><input type="checkbox" class="db-row-cb" value="${ev.id}" onchange="updateDeleteSelectedBtn()"></td><td>${ev.id}</td><td>${formatTime(ev.timestamp)}</td><td><span class="badge badge-${s}">${s}</span></td><td>${ipHTML(ev.src_ip)}</td><td>${ev.event_type||''}</td><td title="${esc(summarize(ev.data))}">${esc(summarize(ev.data))}${threatBadges(ev.data)}</td>`;
         tr.onclick = () => showEventDetail(ev);
         tbody.appendChild(tr);
     });
+    updateDeleteSelectedBtn();
 }
 
 function dbSort(col) { dbSortCol = col; loadDatabaseTab(); }
@@ -2121,6 +2141,244 @@ async function loadBlockedIPs() {
     } catch(e) {}
 }
 
+// ── DATABASE: Select & Delete Events ──────────────────────────────────────────
+function toggleSelectAllEvents() {
+    const checked = document.getElementById('dbSelectAll').checked;
+    document.querySelectorAll('.db-row-cb').forEach(cb => cb.checked = checked);
+    updateDeleteSelectedBtn();
+}
+function updateDeleteSelectedBtn() {
+    const checked = document.querySelectorAll('.db-row-cb:checked');
+    const bar = document.getElementById('dbBulkBar');
+    const cnt = document.getElementById('dbSelCount');
+    if (checked.length > 0) { bar.style.display = 'flex'; cnt.textContent = checked.length; }
+    else { bar.style.display = 'none'; }
+}
+function clearDbSelection() {
+    document.getElementById('dbSelectAll').checked = false;
+    document.querySelectorAll('.db-row-cb').forEach(cb => cb.checked = false);
+    updateDeleteSelectedBtn();
+}
+function confirmDeleteSelectedEvents() {
+    const ids = Array.from(document.querySelectorAll('.db-row-cb:checked')).map(cb => parseInt(cb.value));
+    if (!ids.length) return;
+    openModal('Delete Events', `
+        <div class="confirm-body">
+            <p style="font-size:18px;font-weight:700;color:var(--red)">Delete ${ids.length} event${ids.length>1?'s':''}?</p>
+            <p class="warn">This action cannot be undone.</p>
+            <div class="confirm-btns">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-danger" onclick="executeDeleteEvents(${JSON.stringify(ids)})">Delete</button>
+            </div>
+        </div>
+    `);
+}
+async function executeDeleteEvents(ids) {
+    closeModal();
+    try {
+        const r = await fetch('/api/events/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids}) });
+        const data = await r.json();
+        if (r.ok) { showToast(`Deleted ${data.deleted} event${data.deleted!==1?'s':''}`); loadDatabaseTab(); refreshStats(); }
+        else showToast(data.error||'Delete failed','error');
+    } catch(e) { showToast('Delete failed: '+e.message,'error'); }
+}
+function confirmDeleteFilteredEvents() {
+    const svcBoxes = document.querySelectorAll('#dbSvcCheckboxes input:checked');
+    const typeBoxes = document.querySelectorAll('#dbTypeCheckboxes input:checked');
+    const services = Array.from(svcBoxes).map(c => c.value);
+    const event_types = Array.from(typeBoxes).map(c => c.value);
+    const src_ip = document.getElementById('dbFilterIP').value;
+    const from = document.getElementById('dbFilterFrom').value;
+    const to = document.getElementById('dbFilterTo').value;
+    if (!services.length && !event_types.length && !src_ip && !from && !to) {
+        showToast('Set at least one filter before bulk delete','error'); return;
+    }
+    const filterDesc = [];
+    if (services.length < 11) filterDesc.push(services.join(', '));
+    if (event_types.length < 8) filterDesc.push('types: ' + event_types.join(', '));
+    if (src_ip) filterDesc.push('IP: ' + src_ip);
+    if (from) filterDesc.push('from: ' + from);
+    if (to) filterDesc.push('to: ' + to);
+    openModal('Delete Matching Events', `
+        <div class="confirm-body">
+            <p style="font-size:18px;font-weight:700;color:var(--red)">Delete all matching events?</p>
+            <p style="color:var(--text-secondary);font-size:12px;margin-bottom:8px">${dbTotal} events match current filters</p>
+            <p style="font-size:11px;color:var(--text-secondary)">${filterDesc.join(' | ')}</p>
+            <p class="warn" style="margin-top:8px">This action cannot be undone.</p>
+            <div class="confirm-btns">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-danger" onclick="executeDeleteFilteredEvents()">Delete All Matching</button>
+            </div>
+        </div>
+    `);
+}
+async function executeDeleteFilteredEvents() {
+    closeModal();
+    const svcBoxes = document.querySelectorAll('#dbSvcCheckboxes input:checked');
+    const typeBoxes = document.querySelectorAll('#dbTypeCheckboxes input:checked');
+    const services = Array.from(svcBoxes).map(c => c.value);
+    const event_types = Array.from(typeBoxes).map(c => c.value);
+    const src_ip = document.getElementById('dbFilterIP').value;
+    const from = document.getElementById('dbFilterFrom').value;
+    const to = document.getElementById('dbFilterTo').value;
+    const body = {};
+    if (services.length && services.length < 11) body.services = services;
+    if (event_types.length && event_types.length < 8) body.event_types = event_types;
+    if (src_ip) body.src_ip = src_ip;
+    if (from) body.time_from = new Date(from).toISOString();
+    if (to) body.time_to = new Date(to).toISOString();
+    try {
+        const r = await fetch('/api/events/delete-filtered', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        const data = await r.json();
+        if (r.ok) { showToast(`Deleted ${data.deleted} event${data.deleted!==1?'s':''}`); loadDatabaseTab(); refreshStats(); }
+        else showToast(data.error||'Delete failed','error');
+    } catch(e) { showToast('Delete failed: '+e.message,'error'); }
+}
+
+// ── SESSIONS: Select & Delete ─────────────────────────────────────────────
+function toggleSelectAllSessions() {
+    const checked = document.getElementById('sessSelectAll').checked;
+    document.querySelectorAll('.sess-row-cb').forEach(cb => cb.checked = checked);
+    updateDeleteSelectedSessionsBtn();
+}
+function updateDeleteSelectedSessionsBtn() {
+    const checked = document.querySelectorAll('.sess-row-cb:checked');
+    const bar = document.getElementById('sessBulkBar');
+    const cnt = document.getElementById('sessSelCount');
+    if (checked.length > 0) { bar.style.display = 'flex'; cnt.textContent = checked.length; }
+    else { bar.style.display = 'none'; }
+}
+function clearSessSelection() {
+    document.getElementById('sessSelectAll').checked = false;
+    document.querySelectorAll('.sess-row-cb').forEach(cb => cb.checked = false);
+    updateDeleteSelectedSessionsBtn();
+}
+function confirmDeleteSelectedSessions() {
+    const ids = Array.from(document.querySelectorAll('.sess-row-cb:checked')).map(cb => cb.value);
+    if (!ids.length) return;
+    openModal('Delete Sessions', `
+        <div class="confirm-body">
+            <p style="font-size:18px;font-weight:700;color:var(--red)">Delete ${ids.length} session${ids.length>1?'s':''}?</p>
+            <p style="color:var(--text-secondary);font-size:12px">This will also delete all events belonging to these sessions.</p>
+            <p class="warn">This action cannot be undone.</p>
+            <div class="confirm-btns">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-danger" onclick="executeDeleteSessions()">Delete</button>
+            </div>
+        </div>
+    `);
+}
+async function executeDeleteSessions() {
+    closeModal();
+    const ids = Array.from(document.querySelectorAll('.sess-row-cb:checked')).map(cb => cb.value);
+    try {
+        const r = await fetch('/api/sessions/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids}) });
+        const data = await r.json();
+        if (r.ok) { showToast(`Deleted ${data.deleted} session${data.deleted!==1?'s':''} and their events`); loadSessionsTab(); refreshStats(); }
+        else showToast(data.error||'Delete failed','error');
+    } catch(e) { showToast('Delete failed: '+e.message,'error'); }
+}
+
+// ── ALERTS: Select & Delete ──────────────────────────────────────────────
+function updateDeleteSelectedAlertsBtn() {
+    const checked = document.querySelectorAll('.alert-row-cb:checked');
+    const bar = document.getElementById('alertBulkBar');
+    const cnt = document.getElementById('alertSelCount');
+    if (checked.length > 0) { bar.style.display = 'flex'; cnt.textContent = checked.length; }
+    else { bar.style.display = 'none'; }
+}
+function clearAlertSelection() {
+    document.querySelectorAll('.alert-row-cb').forEach(cb => cb.checked = false);
+    updateDeleteSelectedAlertsBtn();
+}
+function confirmDeleteSelectedAlerts() {
+    const ids = Array.from(document.querySelectorAll('.alert-row-cb:checked')).map(cb => parseInt(cb.value));
+    if (!ids.length) return;
+    openModal('Delete Alerts', `
+        <div class="confirm-body">
+            <p style="font-size:18px;font-weight:700;color:var(--red)">Delete ${ids.length} alert${ids.length>1?'s':''}?</p>
+            <p class="warn">This action cannot be undone.</p>
+            <div class="confirm-btns">
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-danger" onclick="executeDeleteAlerts(${JSON.stringify(ids)})">Delete</button>
+            </div>
+        </div>
+    `);
+}
+async function executeDeleteAlerts(ids) {
+    closeModal();
+    try {
+        const r = await fetch('/api/alerts/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ids}) });
+        const data = await r.json();
+        if (r.ok) { showToast(`Deleted ${data.deleted} alert${data.deleted!==1?'s':''}`); loadAlertsTab(); refreshStats(); }
+        else showToast(data.error||'Delete failed','error');
+    } catch(e) { showToast('Delete failed: '+e.message,'error'); }
+}
+
+// ── PAYLOAD SCAN ─────────────────────────────────────────────────────────
+function openPayloadScanModal() {
+    const svcList = ['ssh','http','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
+    const checkboxes = svcList.map(s => `<label style="display:inline-flex;align-items:center;gap:4px;margin:3px 6px"><input type="checkbox" class="scan-svc-cb" value="${s}" checked> ${s.toUpperCase()}</label>`).join('');
+    openModal('Scan Database for Payloads', `
+        <div style="margin-bottom:16px">
+            <p style="font-size:13px;margin-bottom:12px">Scan historical events for payload patterns and IOCs. Events already alerted will be skipped.</p>
+            <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-secondary);margin-bottom:6px">Services to scan</div>
+            <div style="display:flex;flex-wrap:wrap">${checkboxes}</div>
+        </div>
+        <div id="scanProgress" style="display:none;margin-bottom:16px">
+            <div style="font-size:12px;color:var(--cyan);margin-bottom:6px" id="scanStatusText">Scanning...</div>
+            <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div id="scanProgressBar" style="height:100%;background:var(--cyan);width:0%;transition:width 0.3s"></div></div>
+        </div>
+        <div id="scanResults" style="display:none;margin-bottom:16px"></div>
+        <div class="confirm-btns" id="scanBtns">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-danger" style="background:var(--cyan)" onclick="executePayloadScan()">Start Scan</button>
+        </div>
+    `);
+}
+async function executePayloadScan() {
+    const services = Array.from(document.querySelectorAll('.scan-svc-cb:checked')).map(cb => cb.value);
+    const progress = document.getElementById('scanProgress');
+    const bar = document.getElementById('scanProgressBar');
+    const statusText = document.getElementById('scanStatusText');
+    const btns = document.getElementById('scanBtns');
+    const results = document.getElementById('scanResults');
+    progress.style.display = 'block';
+    btns.style.display = 'none';
+    bar.style.width = '30%';
+    statusText.textContent = 'Scanning events...';
+    try {
+        const body = services.length ? {services} : {};
+        const r = await fetch('/api/payload-scan', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        bar.style.width = '100%';
+        const data = await r.json();
+        if (r.ok) {
+            statusText.textContent = 'Scan complete';
+            results.style.display = 'block';
+            results.innerHTML = `
+                <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center">
+                    <div style="font-size:24px;font-weight:700;color:var(--cyan)">${data.total_scanned}</div>
+                    <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase;margin-bottom:12px">Events Scanned</div>
+                    <div style="font-size:24px;font-weight:700;color:${data.new_alerts > 0 ? 'var(--red)' : 'var(--green)'}">${data.new_alerts}</div>
+                    <div style="font-size:10px;color:var(--text-secondary);text-transform:uppercase">New Alerts Generated</div>
+                </div>`;
+            btns.style.display = 'flex';
+            btns.innerHTML = '<button class="btn-cancel" onclick="closeModal()">Close</button>';
+            loadPayloadIntel();
+        } else {
+            statusText.textContent = 'Scan failed: ' + (data.error || 'unknown error');
+            statusText.style.color = 'var(--red)';
+            btns.style.display = 'flex';
+            btns.innerHTML = '<button class="btn-cancel" onclick="closeModal()">Close</button>';
+        }
+    } catch(e) {
+        statusText.textContent = 'Scan failed: ' + e.message;
+        statusText.style.color = 'var(--red)';
+        btns.style.display = 'flex';
+        btns.innerHTML = '<button class="btn-cancel" onclick="closeModal()">Close</button>';
+    }
+}
+
 // ── WebSocket ────────────────────────────────────────────────────────────────
 function connectWS() {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -2151,6 +2409,32 @@ function connectWS() {
                 blockedIPs.delete(msg.data.ip);
                 refreshBlockedIPStyles();
                 if (document.getElementById('tab-firewall').classList.contains('active')) loadFirewallTab();
+            }
+            else if (msg.type === 'events_deleted') {
+                showToast(`${msg.data.count} event${msg.data.count!==1?'s':''} deleted`);
+                if (document.getElementById('tab-database').classList.contains('active')) loadDatabaseTab();
+                refreshStats();
+            }
+            else if (msg.type === 'events_deleted_filtered') {
+                showToast(`${msg.data.count} event${msg.data.count!==1?'s':''} deleted (filtered)`);
+                if (document.getElementById('tab-database').classList.contains('active')) loadDatabaseTab();
+                refreshStats();
+            }
+            else if (msg.type === 'alerts_deleted') {
+                showToast(`${msg.data.count} alert${msg.data.count!==1?'s':''} deleted`);
+                if (document.getElementById('tab-alerts').classList.contains('active')) loadAlertsTab();
+                if (document.getElementById('tab-payloadintel').classList.contains('active')) loadPayloadIntel();
+                refreshStats();
+            }
+            else if (msg.type === 'sessions_deleted') {
+                showToast(`${msg.data.count} session${msg.data.count!==1?'s':''} deleted`);
+                if (document.getElementById('tab-sessions').classList.contains('active')) loadSessionsTab();
+                refreshStats();
+            }
+            else if (msg.type === 'payload_scan_complete') {
+                showToast(`Payload scan: ${msg.data.new_alerts} new alert${msg.data.new_alerts!==1?'s':''} from ${msg.data.total_scanned} events`);
+                if (document.getElementById('tab-payloadintel').classList.contains('active')) loadPayloadIntel();
+                refreshStats();
             }
             else if (msg.type === 'database_reset') {
                 showToast('Database was reset');

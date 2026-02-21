@@ -715,6 +715,134 @@ class Database:
         await self._loop.run_in_executor(self._executor, self._reset)
         logger.info("Database reset — all data cleared")
 
+    # ── Selective delete ──────────────────────────────────────────────────
+
+    def _delete_events(self, ids: list[int]) -> int:
+        if not ids:
+            return 0
+        conn = self._get_conn()
+        placeholders = ",".join("?" for _ in ids)
+        cursor = conn.execute(f"DELETE FROM events WHERE id IN ({placeholders})", ids)
+        conn.commit()
+        return cursor.rowcount
+
+    async def delete_events(self, ids: list[int]) -> int:
+        return await self._loop.run_in_executor(self._executor, self._delete_events, ids)
+
+    def _delete_alerts(self, ids: list[int]) -> int:
+        if not ids:
+            return 0
+        conn = self._get_conn()
+        placeholders = ",".join("?" for _ in ids)
+        cursor = conn.execute(f"DELETE FROM alerts WHERE id IN ({placeholders})", ids)
+        conn.commit()
+        return cursor.rowcount
+
+    async def delete_alerts(self, ids: list[int]) -> int:
+        return await self._loop.run_in_executor(self._executor, self._delete_alerts, ids)
+
+    def _delete_sessions(self, ids: list[str]) -> int:
+        if not ids:
+            return 0
+        conn = self._get_conn()
+        placeholders = ",".join("?" for _ in ids)
+        # Cascade: delete events belonging to these sessions first
+        conn.execute(f"DELETE FROM events WHERE session_id IN ({placeholders})", ids)
+        cursor = conn.execute(f"DELETE FROM sessions WHERE id IN ({placeholders})", ids)
+        conn.commit()
+        return cursor.rowcount
+
+    async def delete_sessions(self, ids: list[str]) -> int:
+        return await self._loop.run_in_executor(self._executor, self._delete_sessions, ids)
+
+    def _delete_events_by_filter(self, services=None, event_types=None,
+                                  src_ip=None, time_from=None, time_to=None) -> int:
+        # Safety: require at least one filter
+        if not any([services, event_types, src_ip, time_from, time_to]):
+            return 0
+        conn = self._get_conn()
+        query = "DELETE FROM events WHERE 1=1"
+        params = []
+        if services:
+            placeholders = ",".join("?" for _ in services)
+            query += f" AND service IN ({placeholders})"
+            params.extend(services)
+        if event_types:
+            placeholders = ",".join("?" for _ in event_types)
+            query += f" AND event_type IN ({placeholders})"
+            params.extend(event_types)
+        if src_ip:
+            query += " AND src_ip = ?"
+            params.append(src_ip)
+        if time_from:
+            query += " AND timestamp >= ?"
+            params.append(time_from)
+        if time_to:
+            query += " AND timestamp <= ?"
+            params.append(time_to)
+        cursor = conn.execute(query, params)
+        conn.commit()
+        return cursor.rowcount
+
+    async def delete_events_by_filter(self, **kwargs) -> int:
+        return await self._loop.run_in_executor(
+            self._executor, lambda: self._delete_events_by_filter(**kwargs)
+        )
+
+    # ── Payload scan helpers ──────────────────────────────────────────────
+
+    def _get_scannable_events(self, services=None, batch_size=500, offset=0) -> list[dict]:
+        conn = self._get_conn()
+        scan_types = ('command', 'request', 'query', 'file_transfer')
+        placeholders_types = ",".join("?" for _ in scan_types)
+        query = f"SELECT * FROM events WHERE event_type IN ({placeholders_types})"
+        params = list(scan_types)
+        if services:
+            placeholders_svcs = ",".join("?" for _ in services)
+            query += f" AND service IN ({placeholders_svcs})"
+            params.extend(services)
+        query += " ORDER BY id ASC LIMIT ? OFFSET ?"
+        params.extend([batch_size, offset])
+        rows = conn.execute(query, params).fetchall()
+        result = []
+        for row in rows:
+            d = dict(row)
+            try:
+                d["data"] = json.loads(d["data"]) if d.get("data") else {}
+            except (json.JSONDecodeError, TypeError):
+                d["data"] = {"_raw": str(d.get("data", ""))}
+            result.append(d)
+        return result
+
+    async def get_scannable_events(self, **kwargs) -> list[dict]:
+        return await self._loop.run_in_executor(
+            self._executor, lambda: self._get_scannable_events(**kwargs)
+        )
+
+    def _check_existing_payload_alerts(self, event_ids: list[int]) -> set[int]:
+        """Return event IDs that already have a payload_ioc alert."""
+        if not event_ids:
+            return set()
+        conn = self._get_conn()
+        rows = conn.execute(
+            "SELECT event_ids FROM alerts WHERE rule_name = 'payload_ioc'"
+        ).fetchall()
+        existing = set()
+        for row in rows:
+            try:
+                ids = json.loads(row["event_ids"]) if row["event_ids"] else []
+            except (json.JSONDecodeError, TypeError):
+                ids = []
+            for eid in ids:
+                if isinstance(eid, int):
+                    existing.add(eid)
+        return existing.intersection(event_ids)
+
+    async def check_existing_payload_alerts(self, event_ids: list[int]) -> set[int]:
+        return await self._loop.run_in_executor(
+            self._executor, self._check_existing_payload_alerts, event_ids
+        )
+
     async def close(self):
         self._closed = True
         if self._conn:

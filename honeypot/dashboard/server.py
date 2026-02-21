@@ -60,6 +60,11 @@ class DashboardServer:
         self._app.router.add_get("/api/attackers", self._handle_attackers)
         self._app.router.add_get("/api/payload-stats", self._handle_payload_stats)
         self._app.router.add_get("/api/export", self._handle_export)
+        self._app.router.add_post("/api/events/delete", self._handle_delete_events)
+        self._app.router.add_post("/api/alerts/delete", self._handle_delete_alerts)
+        self._app.router.add_post("/api/sessions/delete", self._handle_delete_sessions)
+        self._app.router.add_post("/api/events/delete-filtered", self._handle_delete_events_filtered)
+        self._app.router.add_post("/api/payload-scan", self._handle_payload_scan)
         self._app.router.add_get("/api/firewall/blocked", self._handle_get_blocked)
         self._app.router.add_post("/api/firewall/block", self._handle_block_ip)
         self._app.router.add_post("/api/firewall/unblock", self._handle_unblock_ip)
@@ -462,6 +467,146 @@ class DashboardServer:
             )
         except Exception as e:
             logger.exception("Export failed")
+            return web.json_response({"error": str(e)}, status=500)
+
+    # ── Selective Delete ────────────────────────────────────────────────────
+
+    async def _broadcast_ws(self, msg_dict: dict):
+        """Helper to broadcast a JSON message to all WebSocket clients."""
+        msg = json.dumps(msg_dict)
+        dead = []
+        for ws in self._websockets:
+            try:
+                await ws.send_str(msg)
+            except Exception:
+                dead.append(ws)
+        for ws in dead:
+            self._websockets.discard(ws)
+
+    async def _handle_delete_events(self, request: web.Request) -> web.Response:
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid JSON"}, status=400)
+        ids = body.get("ids", [])
+        if not ids or not isinstance(ids, list):
+            return web.json_response({"error": "ids list required"}, status=400)
+        try:
+            deleted = await self._db.delete_events([int(i) for i in ids])
+            await self._broadcast_ws({"type": "events_deleted", "data": {"count": deleted}})
+            return web.json_response({"status": "ok", "deleted": deleted})
+        except Exception as e:
+            logger.exception("Delete events failed")
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def _handle_delete_alerts(self, request: web.Request) -> web.Response:
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid JSON"}, status=400)
+        ids = body.get("ids", [])
+        if not ids or not isinstance(ids, list):
+            return web.json_response({"error": "ids list required"}, status=400)
+        try:
+            deleted = await self._db.delete_alerts([int(i) for i in ids])
+            await self._broadcast_ws({"type": "alerts_deleted", "data": {"count": deleted}})
+            return web.json_response({"status": "ok", "deleted": deleted})
+        except Exception as e:
+            logger.exception("Delete alerts failed")
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def _handle_delete_sessions(self, request: web.Request) -> web.Response:
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid JSON"}, status=400)
+        ids = body.get("ids", [])
+        if not ids or not isinstance(ids, list):
+            return web.json_response({"error": "ids list required"}, status=400)
+        try:
+            deleted = await self._db.delete_sessions([str(i) for i in ids])
+            await self._broadcast_ws({"type": "sessions_deleted", "data": {"count": deleted}})
+            return web.json_response({"status": "ok", "deleted": deleted})
+        except Exception as e:
+            logger.exception("Delete sessions failed")
+            return web.json_response({"error": str(e)}, status=500)
+
+    async def _handle_delete_events_filtered(self, request: web.Request) -> web.Response:
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid JSON"}, status=400)
+        services = body.get("services")
+        event_types = body.get("event_types")
+        src_ip = body.get("src_ip")
+        time_from = body.get("time_from")
+        time_to = body.get("time_to")
+        if not any([services, event_types, src_ip, time_from, time_to]):
+            return web.json_response({"error": "at least one filter required"}, status=400)
+        try:
+            deleted = await self._db.delete_events_by_filter(
+                services=services, event_types=event_types,
+                src_ip=src_ip, time_from=time_from, time_to=time_to,
+            )
+            await self._broadcast_ws({"type": "events_deleted_filtered", "data": {"count": deleted}})
+            return web.json_response({"status": "ok", "deleted": deleted})
+        except Exception as e:
+            logger.exception("Filtered delete failed")
+            return web.json_response({"error": str(e)}, status=500)
+
+    # ── Payload Scan ─────────────────────────────────────────────────────
+
+    async def _handle_payload_scan(self, request: web.Request) -> web.Response:
+        """Scan historical events for payload/IOC patterns."""
+        try:
+            body = await request.json() if request.content_length else {}
+        except Exception:
+            body = {}
+        services = body.get("services")
+        try:
+            from ..alerts import PayloadIOCDetector
+            from ..models import Event
+            detector = PayloadIOCDetector()
+            offset = 0
+            batch_size = 500
+            total_scanned = 0
+            new_alerts = 0
+            while True:
+                batch = await self._db.get_scannable_events(
+                    services=services, batch_size=batch_size, offset=offset,
+                )
+                if not batch:
+                    break
+                # Check which events already have payload alerts
+                batch_ids = [e["id"] for e in batch if e.get("id")]
+                already_alerted = await self._db.check_existing_payload_alerts(batch_ids)
+                for ev_dict in batch:
+                    total_scanned += 1
+                    if ev_dict.get("id") in already_alerted:
+                        continue
+                    event = Event(
+                        id=ev_dict.get("id"),
+                        session_id=ev_dict.get("session_id", ""),
+                        event_type=ev_dict.get("event_type", ""),
+                        service=ev_dict.get("service", ""),
+                        src_ip=ev_dict.get("src_ip", ""),
+                        timestamp=ev_dict.get("timestamp", ""),
+                        data=ev_dict.get("data", {}),
+                    )
+                    alert = detector.check(event)
+                    if alert:
+                        await self._db.save_alert(alert)
+                        new_alerts += 1
+                offset += batch_size
+            result = {
+                "status": "ok",
+                "total_scanned": total_scanned,
+                "new_alerts": new_alerts,
+            }
+            await self._broadcast_ws({"type": "payload_scan_complete", "data": result})
+            return web.json_response(result)
+        except Exception as e:
+            logger.exception("Payload scan failed")
             return web.json_response({"error": str(e)}, status=500)
 
     # ── Firewall / IP blocking ────────────────────────────────────────────
