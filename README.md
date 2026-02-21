@@ -13,7 +13,7 @@
 
 Built entirely in Python with asyncio for high concurrency and zero threads per connection.
 
-<img width="1888" height="1008" alt="image" src="https://github.com/user-attachments/assets/83b7673e-1da9-4f65-b2ea-aaf052d9a2af" />
+<img width="2504" height="1305" alt="image" src="https://github.com/user-attachments/assets/b7af8ffd-e6e6-4ff1-a389-fff02ba12a42" />
 
 ---
 
