@@ -34,7 +34,7 @@ Built entirely in Python with asyncio for high concurrency and zero threads per 
 | Service | Default Port | Protocol Detail |
 |---------|-------------|-----------------|
 | **SSH** | 2222 | Full Paramiko-based SSH server with shell emulation, command logging, and credential capture |
-| **HTTP** | 8080 | Login page honeypot — captures GET/POST requests, form credentials, and user agents |
+| **Docker** | 2375 | Docker Engine API v1.41 honeypot — captures container create/start, image pull, version/info probes from cryptominer bots |
 | **FTP** | 21 | RFC 959 implementation with USER/PASS capture, fake directory listings, and file transfer logging |
 | **SMB** | 4450 | SMB1/SMB2 negotiate + NTLM authentication capture with session setup |
 | **MySQL** | 3306 | Full handshake (v10 protocol), authentication, and COM_QUERY logging |
@@ -101,7 +101,7 @@ This launches a single-screen interactive setup:
 ```
 ? Select services & configure ports (space = toggle, → = set port, enter = confirm)
   ❯ [x] SSH       :2222
-    [x] HTTP      :8080
+    [x] DOCKER    :2375
     [x] FTP       :21
     [ ] SMB       :4450
     [x] MYSQL     :3306
@@ -136,11 +136,11 @@ python main.py --headless --config profiles/default.yaml
 
 ### Dashboard Authentication
 
-An auth token is always set — either auto-generated or entered during interactive setup. All dashboard routes require authentication. The login page will prompt for the token. API requests can authenticate via:
+The dashboard uses username/password authentication with session-based auth. Default credentials are **admin:admin** — change the password after first login. API requests can authenticate via:
 
 - **Cookie** — set automatically after login
-- **Bearer token** — `Authorization: Bearer YOUR_SECRET_TOKEN`
-- **WebSocket** — token passed as query parameter
+- **Bearer token** — `Authorization: Bearer <session_token>`
+- **WebSocket** — session token passed as query parameter
 
 ### CLI Options
 
@@ -175,9 +175,9 @@ ssh:
   enabled: true
   port: 2222
   banner: "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6"
-http:
+docker:
   enabled: true
-  port: 8080
+  port: 2375
 mysql:
   enabled: true
   port: 3306
@@ -185,15 +185,15 @@ mysql:
 # ... all 11 services
 ```
 
-**`minimal.yaml`** — SSH + HTTP only (lightweight):
+**`minimal.yaml`** — SSH + Docker only (lightweight):
 
 ```yaml
 ssh:
   enabled: true
   port: 2222
-http:
+docker:
   enabled: true
-  port: 8080
+  port: 2375
 # all other services: enabled: false
 ```
 
@@ -262,8 +262,7 @@ Target: 127.0.0.1
   Honeypot Service Probes
 ============================================================
   [PASS] SSH        banner: SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6
-  [PASS] HTTP GET / status=200, body=2936b
-  [PASS] HTTP POST  status=302
+  [PASS] Docker     /_ping: OK, /version: v20.10.24
   [PASS] FTP        banner: 220 FTP Server ready.
   [PASS] MySQL      handshake=95b, auth_resp=11b, query_resp=55b
   [PASS] SMB        negotiate response=133b
@@ -276,7 +275,7 @@ Target: 127.0.0.1
   [PASS] ADB        device: Pixel 7
   [PASS] ADB shell  uid=0(root) gid=0(root)
   ...
-  31 passed, 0 failed out of 31 checks
+  30 passed, 0 failed out of 30 checks
 ```
 
 ---
@@ -300,7 +299,7 @@ honeypot/
 ├── services/
 │   ├── __init__.py      # BaseHoneypotService ABC
 │   ├── ssh.py           # SSH (Paramiko)
-│   ├── http.py          # HTTP login trap
+│   ├── docker.py        # Docker Engine API
 │   ├── ftp.py           # FTP
 │   ├── smb.py           # SMB/CIFS
 │   ├── mysql.py         # MySQL
@@ -312,7 +311,7 @@ honeypot/
 │   └── adb.py           # Android Debug Bridge
 profiles/
 ├── default.yaml         # All services
-├── minimal.yaml         # SSH + HTTP
+├── minimal.yaml         # SSH + Docker
 └── database_trap.yaml   # Database services
 ```
 
