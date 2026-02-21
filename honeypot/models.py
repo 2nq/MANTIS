@@ -30,6 +30,9 @@ class ServiceType(str, Enum):
     VNC = "vnc"
     REDIS = "redis"
     ADB = "adb"
+    ELASTICSEARCH = "elasticsearch"
+    KUBERNETES = "kubernetes"
+    MQTT = "mqtt"
 
 
 class AlertSeverity(str, Enum):

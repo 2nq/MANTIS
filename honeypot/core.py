@@ -20,6 +20,9 @@ from .services.mongodb import MongoDBHoneypot
 from .services.vnc import VNCHoneypot
 from .services.redis import RedisHoneypot
 from .services.adb import ADBHoneypot
+from .services.elasticsearch import ElasticsearchHoneypot
+from .services.kubernetes import KubernetesHoneypot
+from .services.mqtt import MQTTHoneypot
 
 logger = logging.getLogger("honeypot.core")
 
@@ -35,6 +38,9 @@ SERVICE_MAP = {
     "vnc": VNCHoneypot,
     "redis": RedisHoneypot,
     "adb": ADBHoneypot,
+    "elasticsearch": ElasticsearchHoneypot,
+    "kubernetes": KubernetesHoneypot,
+    "mqtt": MQTTHoneypot,
 }
 
 

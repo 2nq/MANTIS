@@ -51,6 +51,16 @@ SERVICE_EXTRA_SCHEMA = {
         "device_model": {"label": "Device Model", "default": "Pixel 7", "type": "text"},
         "android_version": {"label": "Android Version", "default": "14", "type": "text"},
     },
+    "elasticsearch": {
+        "cluster_name": {"label": "Cluster Name", "default": "production-cluster", "type": "text"},
+        "node_name": {"label": "Node Name", "default": "prod-es-node-01", "type": "text"},
+    },
+    "kubernetes": {
+        "cluster_name": {"label": "Cluster Name", "default": "prod-cluster", "type": "text"},
+    },
+    "mqtt": {
+        "broker_name": {"label": "Broker Name", "default": "prod-mqtt-01", "type": "text"},
+    },
 }
 
 # Banner presets per service for quick selection in the UI.
@@ -156,6 +166,26 @@ BANNER_PRESETS = {
         {"label": "Fire TV Stick", "value": "device::AFTSS (Fire TV Stick)"},
         {"label": "IP Camera (Hikvision)", "value": "device::DS-2CD2143G2-IU"},
     ],
+    "elasticsearch": [
+        {"label": "Elasticsearch 8.11", "value": "8.11.4"},
+        {"label": "Elasticsearch 8.6", "value": "8.6.2"},
+        {"label": "Elasticsearch 7.17 LTS", "value": "7.17.16"},
+        {"label": "OpenSearch 2.11", "value": "2.11.1"},
+    ],
+    "kubernetes": [
+        {"label": "Kubernetes 1.28", "value": "v1.28.4"},
+        {"label": "Kubernetes 1.27", "value": "v1.27.8"},
+        {"label": "Kubernetes 1.26", "value": "v1.26.11"},
+        {"label": "K3s 1.28", "value": "v1.28.4+k3s1"},
+        {"label": "MicroK8s 1.28", "value": "v1.28.3-mk8s"},
+    ],
+    "mqtt": [
+        {"label": "Mosquitto 2.0", "value": "mosquitto/2.0.18"},
+        {"label": "Mosquitto 1.6", "value": "mosquitto/1.6.15"},
+        {"label": "EMQX 5.3", "value": "emqx/5.3.2"},
+        {"label": "HiveMQ 4.24", "value": "hivemq/4.24.0"},
+        {"label": "VerneMQ 1.13", "value": "vernemq/1.13.0"},
+    ],
 }
 
 
@@ -195,6 +225,9 @@ class HoneypotConfig:
     vnc: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=5900, banner="prod-workstation:0"))
     redis: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=6379))
     adb: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=5555, banner="device::Pixel 7"))
+    elasticsearch: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=9200, banner="8.11.4"))
+    kubernetes: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=6443))
+    mqtt: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=1883, banner="mosquitto/2.0.18"))
     dashboard: DashboardConfig = field(default_factory=lambda: DashboardConfig(port=8843))
     alerts: AlertConfig = field(default_factory=AlertConfig)
     database_path: str = "honeypot.db"
@@ -205,7 +238,7 @@ class HoneypotConfig:
 
     def enabled_services(self) -> list:
         services = []
-        for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+        for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb", "elasticsearch", "kubernetes", "mqtt"):
             cfg = self.get_service_config(name)
             if cfg.enabled:
                 services.append(name)
@@ -214,7 +247,7 @@ class HoneypotConfig:
     def to_dict(self) -> dict:
         """Serialize entire config to a dictionary."""
         result = {}
-        for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+        for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb", "elasticsearch", "kubernetes", "mqtt"):
             cfg = self.get_service_config(name)
             entry = {
                 "enabled": cfg.enabled,
@@ -261,7 +294,7 @@ def load_config(path: Optional[str] = None) -> HoneypotConfig:
     with open(path, "r") as f:
         raw = yaml.safe_load(f) or {}
 
-    for svc_name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+    for svc_name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb", "elasticsearch", "kubernetes", "mqtt"):
         if svc_name in raw:
             _merge_service(getattr(config, svc_name), raw[svc_name])
 
@@ -297,7 +330,7 @@ def save_config(config: HoneypotConfig, path: str = "mantis_config.yaml"):
     """Write the current config to a YAML file."""
     data = config.to_dict()
     # Flatten extra into service dicts for clean YAML
-    for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+    for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb", "elasticsearch", "kubernetes", "mqtt"):
         svc = data.get(name, {})
         extra = svc.pop("extra", None)
         if extra:

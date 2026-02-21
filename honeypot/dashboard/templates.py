@@ -178,6 +178,9 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 .badge-vnc { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
 .badge-redis { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 .badge-adb { background: rgba(163, 230, 53, 0.2); color: #a3e635; }
+.badge-elasticsearch { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+.badge-kubernetes { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+.badge-mqtt { background: rgba(52, 211, 153, 0.2); color: #34d399; }
 .badge-critical { background: rgba(239, 68, 68, 0.2); color: var(--red); }
 .badge-high { background: rgba(245, 158, 11, 0.2); color: var(--orange); }
 .badge-medium { background: rgba(59, 130, 246, 0.2); color: var(--accent); }
@@ -277,7 +280,9 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 
 /* Toast */
 .toast-container { position: fixed; top: 16px; right: 16px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
-.toast { padding: 12px 20px; border-radius: 6px; font-size: 13px; animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 4.7s forwards; pointer-events: none; max-width: 400px; }
+.toast { padding: 12px 20px; border-radius: 6px; font-size: 13px; animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 4.7s forwards; pointer-events: none; max-width: 400px; transition: background 0.15s; }
+.toast.clickable { pointer-events: auto; cursor: pointer; }
+.toast.clickable:hover { filter: brightness(1.1); }
 .toast.success { background: rgba(245, 158, 11, 0.95); color: #08090a; font-weight: 600; }
 .toast.error { background: rgba(239, 68, 68, 0.9); color: white; }
 @keyframes toastIn { from { opacity: 0; transform: translateX(50px); } to { opacity: 1; transform: translateX(0); } }
@@ -556,6 +561,9 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
             <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div> VNC</div>
             <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Redis</div>
             <div class="legend-item"><div class="legend-dot" style="background:#a3e635"></div> ADB</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div> Elastic</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#38bdf8"></div> K8s</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div> MQTT</div>
             <div class="legend-item" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div class="legend-dot" style="background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,0.3)"></div> Multiple services</div>
         </div>
         <div class="map-top-ips">
@@ -583,6 +591,9 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
             <label><input type="checkbox" value="vnc" checked> VNC</label>
             <label><input type="checkbox" value="redis" checked> Redis</label>
             <label><input type="checkbox" value="adb" checked> ADB</label>
+            <label><input type="checkbox" value="elasticsearch" checked> Elastic</label>
+            <label><input type="checkbox" value="kubernetes" checked> K8s</label>
+            <label><input type="checkbox" value="mqtt" checked> MQTT</label>
         </div>
     </div>
     <div class="filter-group">
@@ -640,6 +651,9 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
             <label><input type="checkbox" value="vnc" checked> VNC</label>
             <label><input type="checkbox" value="redis" checked> Redis</label>
             <label><input type="checkbox" value="adb" checked> ADB</label>
+            <label><input type="checkbox" value="elasticsearch" checked> Elastic</label>
+            <label><input type="checkbox" value="kubernetes" checked> K8s</label>
+            <label><input type="checkbox" value="mqtt" checked> MQTT</label>
         </div>
     </div>
     <button class="filter-btn" onclick="loadSessionsTab()">Apply</button>
@@ -858,6 +872,9 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
             <label><input type="checkbox" value="vnc" checked> VNC</label>
             <label><input type="checkbox" value="redis" checked> Redis</label>
             <label><input type="checkbox" value="adb" checked> ADB</label>
+            <label><input type="checkbox" value="elasticsearch" checked> Elastic</label>
+            <label><input type="checkbox" value="kubernetes" checked> K8s</label>
+            <label><input type="checkbox" value="mqtt" checked> MQTT</label>
         </div>
     </div>
     <div class="filter-group">
@@ -990,7 +1007,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 
 <script>
 // ── Constants ────────────────────────────────────────────────────────────────
-const serviceColors = { ssh: '#8b5cf6', docker: '#3b82f6', ftp: '#10b981', smb: '#f59e0b', mysql: '#06b6d4', telnet: '#ec4899', smtp: '#eab308', mongodb: '#22c55e', vnc: '#a855f7', redis: '#ef4444', adb: '#a3e635' };
+const serviceColors = { ssh: '#8b5cf6', docker: '#3b82f6', ftp: '#10b981', smb: '#f59e0b', mysql: '#06b6d4', telnet: '#ec4899', smtp: '#eab308', mongodb: '#22c55e', vnc: '#a855f7', redis: '#ef4444', adb: '#a3e635', elasticsearch: '#fbbf24', kubernetes: '#38bdf8', mqtt: '#34d399' };
 const typeColors = { connection: '#3b82f6', auth_attempt: '#f59e0b', command: '#ef4444', request: '#8b5cf6', query: '#06b6d4', file_transfer: '#10b981', ntlm_auth: '#f97316', disconnect: '#6b7280', error: '#dc2626' };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1023,13 +1040,14 @@ function threatBadges(data) {
 }
 
 // ── Toast ────────────────────────────────────────────────────────────────────
-function showToast(msg, type='success') {
+function showToast(msg, type='success', onclick=null) {
     const c = document.getElementById('toastContainer');
     const t = document.createElement('div');
-    t.className = 'toast ' + type;
-    t.textContent = msg;
+    t.className = 'toast ' + type + (onclick ? ' clickable' : '');
+    t.textContent = msg + (onclick ? ' — click to view' : '');
+    if (onclick) { t.addEventListener('click', () => { t.remove(); onclick(); }); }
     c.appendChild(t);
-    setTimeout(() => t.remove(), 5000);
+    setTimeout(() => t.remove(), onclick ? 8000 : 5000);
 }
 
 // ── Modal ────────────────────────────────────────────────────────────────────
@@ -1739,7 +1757,7 @@ async function loadConfigTab() {
         // ── Service cards ──
         const grid = document.getElementById('configGrid');
         grid.innerHTML = '';
-        const svcNames = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
+        const svcNames = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb','elasticsearch','kubernetes','mqtt'];
         svcNames.forEach(name => {
             const svc = data[name];
             if (!svc) return;
@@ -1946,6 +1964,22 @@ async function loadSessionById(sid) {
     } catch(e) { showToast('Failed to load session: ' + e.message, 'error'); }
 }
 
+async function loadEventById(eventId) {
+    closeModal();
+    try {
+        const events = await apiFetch('/api/events?limit=1&search=' + eventId);
+        const ev = (Array.isArray(events) ? events : events.events || []).find(x => x.id === eventId || x.id === Number(eventId));
+        if (ev) { showEventDetail(ev); }
+        else {
+            // Fallback: search in database tab
+            const all = await apiFetch('/api/events?limit=500');
+            const ev2 = (Array.isArray(all) ? all : all.events || []).find(x => x.id === eventId || x.id === Number(eventId));
+            if (ev2) showEventDetail(ev2);
+            else showToast('Event ' + eventId + ' not found', 'error');
+        }
+    } catch(e) { showToast('Failed to load event: ' + e.message, 'error'); }
+}
+
 function showAlertDetail(al) {
     let html = `<div style="margin-bottom:12px">
         <span class="badge badge-${al.severity}">${al.severity}</span>
@@ -1957,7 +1991,7 @@ function showAlertDetail(al) {
         <tr><td style="padding:4px 12px 4px 0;color:var(--text-secondary)">Source IP</td><td>${al.src_ip}</td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:var(--text-secondary)">Service</td><td><span class="badge badge-${al.service}">${al.service}</span></td></tr>
         <tr><td style="padding:4px 12px 4px 0;color:var(--text-secondary)">Timestamp</td><td>${formatDateTime(al.timestamp)}</td></tr>
-        <tr><td style="padding:4px 12px 4px 0;color:var(--text-secondary)">Event IDs</td><td>${(al.event_ids||[]).join(', ') || 'none'}</td></tr>
+        <tr><td style="padding:4px 12px 4px 0;color:var(--text-secondary)">Event IDs</td><td>${(al.event_ids||[]).length ? al.event_ids.map(eid => `<a href="#" onclick="event.preventDefault();loadEventById(${eid})" style="color:var(--accent);margin-right:6px">${eid}</a>`).join('') : 'none'}</td></tr>
     </table>
     <div style="font-size:13px;margin-bottom:8px">${esc(al.message)}</div>`;
     // Payload/IOC detail sections
@@ -2321,7 +2355,7 @@ async function executeDeleteAlerts(ids) {
 
 // ── PAYLOAD SCAN ─────────────────────────────────────────────────────────
 function openPayloadScanModal() {
-    const svcList = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
+    const svcList = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb','elasticsearch','kubernetes','mqtt'];
     const checkboxes = svcList.map(s => `<label style="display:inline-flex;align-items:center;gap:4px;margin:3px 6px"><input type="checkbox" class="scan-svc-cb" value="${s}" checked> ${s.toUpperCase()}</label>`).join('');
     openModal('Scan Database for Payloads', `
         <div style="margin-bottom:16px">
@@ -2404,9 +2438,12 @@ function connectWS() {
             if (msg.type === 'event') { addEvent(msg.data); refreshStats(); }
             else if (msg.type === 'alert') {
                 addAlert(msg.data); refreshStats();
-                if (msg.data.rule_name === 'payload_ioc') {
-                    showToast('New payload/IOC detected from ' + (msg.data.src_ip || '?'));
+                const alertData = msg.data;
+                if (alertData.rule_name === 'payload_ioc') {
+                    showToast('Payload/IOC from ' + (alertData.src_ip || '?') + ' [' + (alertData.service || '?') + ']', 'success', () => showAlertDetail(alertData));
                     if (document.getElementById('tab-payloadintel').classList.contains('active')) loadPayloadIntel();
+                } else {
+                    showToast('Alert: ' + (alertData.message || alertData.rule_name).substring(0, 80), 'success', () => showAlertDetail(alertData));
                 }
             }
             else if (msg.type === 'config_change') { showToast('Config updated by another client'); if (document.getElementById('tab-config').classList.contains('active')) loadConfigTab(); loadActiveHoneypots(); }
@@ -2462,7 +2499,7 @@ async function loadActiveHoneypots() {
         const config = await apiFetch('/api/config');
         const container = document.getElementById('activeHoneypots');
         if (!container) return;
-        const svcOrder = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
+        const svcOrder = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb','elasticsearch','kubernetes','mqtt'];
         container.innerHTML = svcOrder.map(name => {
             const svc = config[name];
             if (!svc) return '';
