@@ -10,7 +10,7 @@ from .geo import GeoLocator
 from .alerts import AlertEngine
 from .dashboard.server import DashboardServer
 from .services.ssh import SSHHoneypot
-from .services.http import HTTPHoneypot
+from .services.docker import DockerAPIHoneypot
 from .services.ftp import FTPHoneypot
 from .services.smb import SMBHoneypot
 from .services.mysql import MySQLHoneypot
@@ -25,7 +25,7 @@ logger = logging.getLogger("honeypot.core")
 
 SERVICE_MAP = {
     "ssh": SSHHoneypot,
-    "http": HTTPHoneypot,
+    "docker": DockerAPIHoneypot,
     "ftp": FTPHoneypot,
     "smb": SMBHoneypot,
     "mysql": MySQLHoneypot,

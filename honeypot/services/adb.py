@@ -16,6 +16,17 @@ ADB_CLSE = 0x45534c43     # CLSE
 ADB_VERSION = 0x01000000
 ADB_MAXDATA = 4096
 
+# ADB AUTH type constants
+ADB_AUTH_TOKEN = 1
+ADB_AUTH_SIGNATURE = 2
+ADB_AUTH_RSAPUBLICKEY = 3
+
+_AUTH_TYPE_NAMES = {
+    ADB_AUTH_TOKEN: "TOKEN",
+    ADB_AUTH_SIGNATURE: "SIGNATURE",
+    ADB_AUTH_RSAPUBLICKEY: "RSAPUBLICKEY",
+}
+
 # Fake device banner
 DEVICE_BANNER = "device::ro.product.model=Pixel 7;ro.product.device=panther;ro.build.version.release=14;ro.build.display.id=UP1A.231005.007"
 
@@ -117,6 +128,24 @@ def _parse_adb_message(data: bytes):
     return command, arg0, arg1, data_len
 
 
+def _parse_client_banner(raw: str) -> dict:
+    """Parse ADB client banner like 'host::features=...' into structured fields."""
+    result = {"raw": raw}
+    parts = raw.split("::", 1)
+    if len(parts) == 2:
+        result["type"] = parts[0]
+        features_str = parts[1]
+        if features_str.startswith("features="):
+            result["features"] = features_str[9:].split(",")
+        else:
+            # key=value;key=value format
+            for kv in features_str.split(";"):
+                if "=" in kv:
+                    k, v = kv.split("=", 1)
+                    result[k] = v
+    return result
+
+
 class ADBHoneypot(BaseHoneypotService):
     service_name = "adb"
 
@@ -156,11 +185,21 @@ class ADBHoneypot(BaseHoneypotService):
                     client_banner = await asyncio.wait_for(reader.readexactly(data_len), timeout=5)
                 except (asyncio.TimeoutError, asyncio.IncompleteReadError):
                     pass
+            elif data_len >= 8192:
+                await self._log(session, EventType.REQUEST, {
+                    "stage": "connect",
+                    "warning": "oversized_payload",
+                    "data_len": data_len,
+                })
+
+            banner_str = client_banner.decode("utf-8", errors="replace").rstrip("\x00")
+            banner_parsed = _parse_client_banner(banner_str)
 
             await self._log(session, EventType.REQUEST, {
                 "stage": "connect",
                 "client_command": hex(command),
-                "client_banner": client_banner.decode("utf-8", errors="replace").rstrip("\x00"),
+                "client_banner": banner_str,
+                "banner_parsed": banner_parsed,
             })
 
             if command == ADB_CNXN:
@@ -170,7 +209,16 @@ class ADBHoneypot(BaseHoneypotService):
                 writer.write(resp)
                 await writer.drain()
             elif command == ADB_AUTH:
-                # Client is trying auth - send CNXN anyway (accept all)
+                # Log the auth attempt with type details
+                auth_type = arg0
+                auth_type_name = _AUTH_TYPE_NAMES.get(auth_type, f"UNKNOWN({auth_type})")
+                await self._log(session, EventType.AUTH_ATTEMPT, {
+                    "auth_type": auth_type_name,
+                    "auth_type_id": auth_type,
+                    "auth_data_hex": client_banner.hex() if client_banner else "",
+                    "auth_data_len": len(client_banner),
+                })
+                # Send CNXN anyway (accept all)
                 banner_data = DEVICE_BANNER.encode("utf-8") + b"\x00"
                 resp = _build_adb_message(ADB_CNXN, ADB_VERSION, ADB_MAXDATA, banner_data)
                 writer.write(resp)
@@ -197,6 +245,13 @@ class ADBHoneypot(BaseHoneypotService):
                         payload = await asyncio.wait_for(reader.readexactly(data_len), timeout=10)
                     except (asyncio.TimeoutError, asyncio.IncompleteReadError):
                         break
+                elif data_len >= 65536:
+                    await self._log(session, EventType.REQUEST, {
+                        "warning": "oversized_payload",
+                        "command": hex(command),
+                        "data_len": data_len,
+                    })
+                    break
 
                 if command == ADB_OPEN:
                     # Client wants to open a stream (e.g., "shell:", "shell:ls")
@@ -206,6 +261,8 @@ class ADBHoneypot(BaseHoneypotService):
                     await self._log(session, EventType.COMMAND, {
                         "command": "OPEN",
                         "destination": dest,
+                        "local_id": arg0,
+                        "remote_id": arg1,
                     })
 
                     # Send OKAY
@@ -248,6 +305,8 @@ class ADBHoneypot(BaseHoneypotService):
                         await self._log(session, EventType.COMMAND, {
                             "command": text,
                             "mode": "interactive",
+                            "local_id": arg0,
+                            "remote_id": arg1,
                         })
 
                         if text in ("exit", "quit"):

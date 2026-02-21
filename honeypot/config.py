@@ -15,9 +15,8 @@ SERVICE_EXTRA_SCHEMA = {
         "credentials": {"label": "Honeytoken Creds (user:pass per line)", "default": "", "type": "textarea",
                         "placeholder": "admin:admin123\nroot:toor"},
     },
-    "http": {
-        "page_title": {"label": "Login Page Title", "default": "Admin Portal - Login", "type": "text"},
-        "company_name": {"label": "Company Name", "default": "Infrastructure Systems", "type": "text"},
+    "docker": {
+        "hostname": {"label": "Docker Hostname", "default": "prod-docker-01", "type": "text"},
     },
     "ftp": {
         "home_dir": {"label": "Home Directory", "default": "/home/admin", "type": "text"},
@@ -62,7 +61,7 @@ BANNER_PRESETS = {
         {"label": "OpenSSH 9.6 Debian", "value": "SSH-2.0-OpenSSH_9.6p1 Debian-4"},
         {"label": "Dropbear 2022.83", "value": "SSH-2.0-dropbear_2022.83"},
     ],
-    "http": [],
+    "docker": [],
     "ftp": [
         {"label": "vsftpd 3.0.5", "value": "220 (vsFTPd 3.0.5)"},
         {"label": "ProFTPD 1.3.8", "value": "220 ProFTPD 1.3.8 Server ready."},
@@ -125,7 +124,7 @@ class AlertConfig:
 @dataclass
 class HoneypotConfig:
     ssh: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=2222, banner="SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6"))
-    http: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=8080))
+    docker: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=2375))
     ftp: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=21, banner="220 FTP Server ready."))
     smb: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=4450))
     mysql: ServiceConfig = field(default_factory=lambda: ServiceConfig(port=3306, banner="5.7.42-0ubuntu0.18.04.1"))
@@ -145,7 +144,7 @@ class HoneypotConfig:
 
     def enabled_services(self) -> list:
         services = []
-        for name in ("ssh", "http", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+        for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
             cfg = self.get_service_config(name)
             if cfg.enabled:
                 services.append(name)
@@ -154,7 +153,7 @@ class HoneypotConfig:
     def to_dict(self) -> dict:
         """Serialize entire config to a dictionary."""
         result = {}
-        for name in ("ssh", "http", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+        for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
             cfg = self.get_service_config(name)
             entry = {
                 "enabled": cfg.enabled,
@@ -201,7 +200,7 @@ def load_config(path: Optional[str] = None) -> HoneypotConfig:
     with open(path, "r") as f:
         raw = yaml.safe_load(f) or {}
 
-    for svc_name in ("ssh", "http", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+    for svc_name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
         if svc_name in raw:
             _merge_service(getattr(config, svc_name), raw[svc_name])
 
@@ -237,7 +236,7 @@ def save_config(config: HoneypotConfig, path: str = "mantis_config.yaml"):
     """Write the current config to a YAML file."""
     data = config.to_dict()
     # Flatten extra into service dicts for clean YAML
-    for name in ("ssh", "http", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+    for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
         svc = data.get(name, {})
         extra = svc.pop("extra", None)
         if extra:

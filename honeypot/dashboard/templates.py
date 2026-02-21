@@ -168,7 +168,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 /* Badges */
 .badge { padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; display: inline-block; }
 .badge-ssh { background: rgba(139, 92, 246, 0.2); color: var(--purple); }
-.badge-http { background: rgba(59, 130, 246, 0.2); color: var(--accent); }
+.badge-docker { background: rgba(59, 130, 246, 0.2); color: var(--accent); }
 .badge-ftp { background: rgba(16, 185, 129, 0.2); color: var(--green); }
 .badge-smb { background: rgba(245, 158, 11, 0.2); color: var(--orange); }
 .badge-mysql { background: rgba(6, 182, 212, 0.2); color: var(--cyan); }
@@ -546,7 +546,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
         <div class="map-legend">
             <h3>Service Colors</h3>
             <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div> SSH</div>
-            <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> HTTP</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Docker</div>
             <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> FTP</div>
             <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> SMB</div>
             <div class="legend-item"><div class="legend-dot" style="background:#06b6d4"></div> MySQL</div>
@@ -573,7 +573,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
         <label>Services</label>
         <div class="checkbox-group" id="evtSvcCheckboxes">
             <label><input type="checkbox" value="ssh" checked> SSH</label>
-            <label><input type="checkbox" value="http" checked> HTTP</label>
+            <label><input type="checkbox" value="docker" checked> Docker</label>
             <label><input type="checkbox" value="ftp" checked> FTP</label>
             <label><input type="checkbox" value="smb" checked> SMB</label>
             <label><input type="checkbox" value="mysql" checked> MySQL</label>
@@ -630,7 +630,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
         <label>Services</label>
         <div class="checkbox-group" id="sessSvcCheckboxes">
             <label><input type="checkbox" value="ssh" checked> SSH</label>
-            <label><input type="checkbox" value="http" checked> HTTP</label>
+            <label><input type="checkbox" value="docker" checked> Docker</label>
             <label><input type="checkbox" value="ftp" checked> FTP</label>
             <label><input type="checkbox" value="smb" checked> SMB</label>
             <label><input type="checkbox" value="mysql" checked> MySQL</label>
@@ -848,7 +848,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
         <label>Services</label>
         <div class="checkbox-group" id="dbSvcCheckboxes">
             <label><input type="checkbox" value="ssh" checked> SSH</label>
-            <label><input type="checkbox" value="http" checked> HTTP</label>
+            <label><input type="checkbox" value="docker" checked> Docker</label>
             <label><input type="checkbox" value="ftp" checked> FTP</label>
             <label><input type="checkbox" value="smb" checked> SMB</label>
             <label><input type="checkbox" value="mysql" checked> MySQL</label>
@@ -990,7 +990,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
 
 <script>
 // ── Constants ────────────────────────────────────────────────────────────────
-const serviceColors = { ssh: '#8b5cf6', http: '#3b82f6', ftp: '#10b981', smb: '#f59e0b', mysql: '#06b6d4', telnet: '#ec4899', smtp: '#eab308', mongodb: '#22c55e', vnc: '#a855f7', redis: '#ef4444', adb: '#a3e635' };
+const serviceColors = { ssh: '#8b5cf6', docker: '#3b82f6', ftp: '#10b981', smb: '#f59e0b', mysql: '#06b6d4', telnet: '#ec4899', smtp: '#eab308', mongodb: '#22c55e', vnc: '#a855f7', redis: '#ef4444', adb: '#a3e635' };
 const typeColors = { connection: '#3b82f6', auth_attempt: '#f59e0b', command: '#ef4444', request: '#8b5cf6', query: '#06b6d4', file_transfer: '#10b981', ntlm_auth: '#f97316', disconnect: '#6b7280', error: '#dc2626' };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1739,7 +1739,7 @@ async function loadConfigTab() {
         // ── Service cards ──
         const grid = document.getElementById('configGrid');
         grid.innerHTML = '';
-        const svcNames = ['ssh','http','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
+        const svcNames = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
         svcNames.forEach(name => {
             const svc = data[name];
             if (!svc) return;
@@ -2321,7 +2321,7 @@ async function executeDeleteAlerts(ids) {
 
 // ── PAYLOAD SCAN ─────────────────────────────────────────────────────────
 function openPayloadScanModal() {
-    const svcList = ['ssh','http','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
+    const svcList = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
     const checkboxes = svcList.map(s => `<label style="display:inline-flex;align-items:center;gap:4px;margin:3px 6px"><input type="checkbox" class="scan-svc-cb" value="${s}" checked> ${s.toUpperCase()}</label>`).join('');
     openModal('Scan Database for Payloads', `
         <div style="margin-bottom:16px">
@@ -2462,7 +2462,7 @@ async function loadActiveHoneypots() {
         const config = await apiFetch('/api/config');
         const container = document.getElementById('activeHoneypots');
         if (!container) return;
-        const svcOrder = ['ssh','http','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
+        const svcOrder = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb'];
         container.innerHTML = svcOrder.map(name => {
             const svc = config[name];
             if (!svc) return '';

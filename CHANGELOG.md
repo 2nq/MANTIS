@@ -2,6 +2,22 @@
 
 All notable changes to MANTIS are documented in this file.
 
+## [2.3.0] - 2026-02-21
+
+### Changed
+- **Replaced HTTP honeypot with Docker API honeypot** — removed HTTP login-page honeypot (port 8080) in favor of a Docker Engine API honeypot on port 2375, emulating unauthenticated Docker daemon v1.41
+- Dashboard service filters, color legend, and badges now show "Docker" instead of "HTTP"
+
+### Added
+- **Docker API honeypot** (`honeypot/services/docker.py`) — emulates `/_ping`, `/version`, `/info`, `/containers/json`, `/containers/create`, `/containers/{id}/start`, `/images/json`, `/images/create` with realistic JSON responses; captures container creation payloads (image, cmd, entrypoint, mounts, env) as `COMMAND` events; supports versioned API paths (`/v1.41/...`)
+- **ADB AUTH_ATTEMPT logging** — ADB honeypot now logs `AUTH_ATTEMPT` events with auth type (TOKEN, SIGNATURE, RSAPUBLICKEY), raw auth data as hex, and data length
+- **ADB client banner parsing** — connect events now include structured `banner_parsed` field (type, features list, or key=value pairs)
+- **ADB oversized payload warnings** — payloads exceeding size limits (8KB connect, 64KB message loop) now generate `REQUEST` warning events with `data_len` instead of being silently dropped
+- **ADB stream IDs in events** — OPEN and WRTE events now include `local_id`/`remote_id` (arg0/arg1) for protocol forensics
+
+### Removed
+- **HTTP honeypot** (`honeypot/services/http.py`) — replaced by Docker API honeypot
+
 ## [2.2.0] - 2026-02-21
 
 ### Added

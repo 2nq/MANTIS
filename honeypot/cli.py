@@ -47,7 +47,7 @@ BANNER = """
 """
 
 ALL_SERVICES = [
-    ("ssh", 2222), ("http", 8080), ("ftp", 21), ("smb", 4450),
+    ("ssh", 2222), ("docker", 2375), ("ftp", 21), ("smb", 4450),
     ("mysql", 3306), ("telnet", 2323), ("smtp", 25),
     ("mongodb", 27017), ("vnc", 5900), ("redis", 6379), ("adb", 5555),
 ]
@@ -308,7 +308,7 @@ def _kill_stale_ports(config: HoneypotConfig):
     """Check for and kill any processes holding our configured ports."""
     import subprocess
     ports = set()
-    for svc_name in ("ssh", "http", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+    for svc_name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
         cfg = config.get_service_config(svc_name)
         if cfg.enabled:
             ports.add(cfg.port)

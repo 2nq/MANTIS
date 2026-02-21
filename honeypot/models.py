@@ -20,7 +20,7 @@ class EventType(str, Enum):
 
 class ServiceType(str, Enum):
     SSH = "ssh"
-    HTTP = "http"
+    DOCKER = "docker"
     FTP = "ftp"
     SMB = "smb"
     MYSQL = "mysql"

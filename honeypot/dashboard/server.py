@@ -394,7 +394,7 @@ class DashboardServer:
         import yaml
         data = self._orchestrator.get_config_dict()
         # Flatten extras for clean YAML
-        for name in ("ssh", "http", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
+        for name in ("ssh", "docker", "ftp", "smb", "mysql", "telnet", "smtp", "mongodb", "vnc", "redis", "adb"):
             svc = data.get(name, {})
             extra = svc.pop("extra", None)
             if extra:
