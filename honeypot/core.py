@@ -98,9 +98,7 @@ class HoneypotOrchestrator:
         if self._on_started:
             import sys
             print(flush=True)
-            token = self.config.dashboard.auth_token
-            if token:
-                print(f"  \033[1mAuth Token \033[33m{token}\033[0m", flush=True)
+            print(f"  \033[1mLogin \033[33madmin:admin\033[0m (change after first login)", flush=True)
             print(f"\n  \033[1m\033[32m{len(self.services)} services active\033[0m — press Ctrl+C to stop\n", flush=True)
 
         # Setup signal handlers

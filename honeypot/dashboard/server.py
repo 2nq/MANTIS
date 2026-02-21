@@ -5,6 +5,7 @@ import csv
 import io
 import json
 import logging
+import secrets
 import shutil
 import subprocess
 import weakref
@@ -31,15 +32,15 @@ class DashboardServer:
 
         self._blocked_ips: set[str] = set()
         self._has_iptables = shutil.which("iptables") is not None
-        self._auth_token = getattr(config, "auth_token", None)
+        self._sessions: dict[str, dict] = {}
 
-        # Auth middleware — if token is set, protect all routes
-        if self._auth_token:
-            self._app.middlewares.append(self._auth_middleware)
+        self._app.middlewares.append(self._auth_middleware)
 
         self._app.router.add_get("/", self._handle_dashboard)
         self._app.router.add_get("/login", self._handle_login)
         self._app.router.add_post("/api/auth", self._handle_auth)
+        self._app.router.add_post("/api/logout", self._handle_logout)
+        self._app.router.add_post("/api/users/change-password", self._handle_change_password)
         self._app.router.add_get("/ws", self._handle_ws)
         self._app.router.add_get("/api/stats", self._handle_stats)
         self._app.router.add_get("/api/events", self._handle_events)
@@ -136,7 +137,7 @@ class DashboardServer:
 
     @web.middleware
     async def _auth_middleware(self, request: web.Request, handler):
-        # Allow login page and auth endpoint without token
+        # Allow login page and auth endpoint without session
         if request.path in ("/login", "/api/auth"):
             return await handler(request)
         # Check cookie or Authorization header
@@ -145,12 +146,12 @@ class DashboardServer:
             auth_header = request.headers.get("Authorization", "")
             if auth_header.startswith("Bearer "):
                 token = auth_header[7:]
-        if token == self._auth_token:
+        if token and token in self._sessions:
             return await handler(request)
         # WebSocket — check token in query string
         if request.path == "/ws":
-            token = request.query.get("token")
-            if token == self._auth_token:
+            qs_token = request.query.get("token")
+            if qs_token and qs_token in self._sessions:
                 return await handler(request)
         # Redirect HTML requests to login, reject API with 401
         if request.path.startswith("/api") or request.path == "/ws":
@@ -158,23 +159,50 @@ class DashboardServer:
         raise web.HTTPFound("/login")
 
     async def _handle_login(self, request: web.Request) -> web.Response:
-        if not self._auth_token:
-            raise web.HTTPFound("/")
         return web.Response(text=LOGIN_HTML, content_type="text/html")
 
     async def _handle_auth(self, request: web.Request) -> web.Response:
-        if not self._auth_token:
-            return web.json_response({"status": "ok"})
         try:
             body = await request.json()
         except Exception:
             return web.json_response({"error": "invalid JSON"}, status=400)
-        token = body.get("token", "")
-        if token == self._auth_token:
+        username = body.get("username", "")
+        password = body.get("password", "")
+        user = await self._db.authenticate_user(username, password)
+        if user:
+            session_token = secrets.token_urlsafe(32)
+            self._sessions[session_token] = {"username": user["username"], "id": user["id"]}
             resp = web.json_response({"status": "ok"})
-            resp.set_cookie("mantis_token", token, httponly=True, samesite="Strict", max_age=86400 * 7)
+            resp.set_cookie("mantis_token", session_token, httponly=True, samesite="Strict", max_age=86400 * 7)
             return resp
-        return web.json_response({"error": "invalid token"}, status=403)
+        return web.json_response({"error": "invalid credentials"}, status=403)
+
+    async def _handle_logout(self, request: web.Request) -> web.Response:
+        token = request.cookies.get("mantis_token")
+        if token:
+            self._sessions.pop(token, None)
+        resp = web.json_response({"status": "ok"})
+        resp.del_cookie("mantis_token")
+        return resp
+
+    async def _handle_change_password(self, request: web.Request) -> web.Response:
+        token = request.cookies.get("mantis_token")
+        session = self._sessions.get(token) if token else None
+        if not session:
+            return web.json_response({"error": "unauthorized"}, status=401)
+        try:
+            body = await request.json()
+        except Exception:
+            return web.json_response({"error": "invalid JSON"}, status=400)
+        current_password = body.get("current_password", "")
+        new_password = body.get("new_password", "")
+        if not new_password:
+            return web.json_response({"error": "new_password required"}, status=400)
+        user = await self._db.authenticate_user(session["username"], current_password)
+        if not user:
+            return web.json_response({"error": "current password incorrect"}, status=403)
+        await self._db.change_password(session["username"], new_password)
+        return web.json_response({"status": "ok"})
 
     async def _handle_dashboard(self, request: web.Request) -> web.Response:
         return web.Response(text=DASHBOARD_HTML, content_type="text/html")

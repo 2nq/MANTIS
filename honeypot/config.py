@@ -112,7 +112,6 @@ class DashboardConfig:
     enabled: bool = True
     host: str = "0.0.0.0"
     port: int = 8080
-    auth_token: Optional[str] = None
 
 
 @dataclass

@@ -4,7 +4,6 @@ import argparse
 import asyncio
 import logging
 import os
-import secrets
 import socket
 import sys
 import time
@@ -228,13 +227,6 @@ def _interactive_setup() -> HoneypotConfig:
     if "dashboard" in ports:
         config.dashboard.port = ports["dashboard"]
 
-    # 2. Auth token
-    default_token = secrets.token_urlsafe(24)
-    token = questionary.text("Auth token", default=default_token, style=MANTIS_STYLE).ask()
-    if token is None:
-        sys.exit(0)
-    config.dashboard.auth_token = token
-
     return config
 
 
@@ -389,8 +381,6 @@ def main():
         config = load_config(args.config)
         if args.db:
             config.database_path = args.db
-        if not config.dashboard.auth_token:
-            config.dashboard.auth_token = secrets.token_urlsafe(24)
     else:
         # Interactive setup
         config = _interactive_setup()

@@ -1,10 +1,13 @@
 """SQLite storage with event subscriber system for real-time push."""
 
 import asyncio
+import hashlib
 import json
 import logging
+import secrets
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from typing import Optional
 
 from .models import Alert, Event, GeoInfo, Session
@@ -68,7 +71,26 @@ CREATE INDEX IF NOT EXISTS idx_events_service ON events(service);
 CREATE INDEX IF NOT EXISTS idx_sessions_src_ip ON sessions(src_ip);
 CREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts(severity);
 CREATE INDEX IF NOT EXISTS idx_alerts_rule_name ON alerts(rule_name);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
 """
+
+
+def _hash_password(password: str) -> str:
+    salt = secrets.token_hex(16)
+    h = hashlib.sha256((salt + password).encode()).hexdigest()
+    return f"{salt}:{h}"
+
+
+def _verify_password(password: str, stored: str) -> bool:
+    salt, expected = stored.split(":", 1)
+    h = hashlib.sha256((salt + password).encode()).hexdigest()
+    return h == expected
 
 
 class Database:
@@ -95,12 +117,55 @@ class Database:
                 self._conn.commit()
             except sqlite3.OperationalError:
                 pass  # column already exists
+            self._ensure_default_user()
         return self._conn
 
     async def initialize(self):
         self._loop = asyncio.get_event_loop()
         await self._loop.run_in_executor(self._executor, self._get_conn)
         logger.info("Database initialized: %s", self._db_path)
+
+    # ── User auth ─────────────────────────────────────────────────────────
+
+    def _ensure_default_user(self):
+        conn = self._conn
+        count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        if count == 0:
+            pw_hash = _hash_password("admin")
+            now = datetime.now(timezone.utc).isoformat()
+            conn.execute(
+                "INSERT INTO users (username, password_hash, created_at) VALUES (?, ?, ?)",
+                ("admin", pw_hash, now),
+            )
+            conn.commit()
+            logger.info("Created default admin user")
+
+    def _authenticate_user(self, username: str, password: str):
+        conn = self._get_conn()
+        row = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
+        if row and _verify_password(password, row["password_hash"]):
+            return {"id": row["id"], "username": row["username"]}
+        return None
+
+    async def authenticate_user(self, username: str, password: str):
+        return await self._loop.run_in_executor(
+            self._executor, self._authenticate_user, username, password
+        )
+
+    def _change_password(self, username: str, new_password: str) -> bool:
+        conn = self._get_conn()
+        row = conn.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
+        if not row:
+            return False
+        pw_hash = _hash_password(new_password)
+        conn.execute("UPDATE users SET password_hash = ? WHERE username = ?", (pw_hash, username))
+        conn.commit()
+        return True
+
+    async def change_password(self, username: str, new_password: str) -> bool:
+        return await self._loop.run_in_executor(
+            self._executor, self._change_password, username, new_password
+        )
 
     def subscribe_events(self) -> asyncio.Queue:
         q: asyncio.Queue = asyncio.Queue(maxsize=1000)

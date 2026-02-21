@@ -25,21 +25,24 @@ body { font-family:'SF Mono','Fira Code','Consolas',monospace; background:var(--
 <div class="login-box">
     <h1>MANTIS</h1>
     <div class="sub">// threat intelligence</div>
-    <div class="error" id="err">Invalid token</div>
-    <input type="password" id="token" placeholder="Enter auth token" autofocus>
+    <div class="error" id="err">Invalid credentials</div>
+    <input type="text" id="username" placeholder="Username" autofocus>
+    <input type="password" id="password" placeholder="Password">
     <button onclick="doLogin()">Authenticate</button>
 </div>
 <script>
-document.getElementById('token').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('username').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('password').focus(); });
+document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 async function doLogin() {
-    const token = document.getElementById('token').value;
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
     const err = document.getElementById('err');
     err.style.display = 'none';
     try {
         const r = await fetch('/api/auth', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token }),
+            body: JSON.stringify({ username, password }),
         });
         if (r.ok) {
             window.location.href = '/';
@@ -451,6 +454,7 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
         <span style="color:#6b7280;font-size:11px;margin-right:12px">WATCH. WAIT. CAPTURE.</span>
         <div class="dot" id="wsDot"></div>
         <span id="wsStatus">Connecting...</span>
+        <button onclick="doLogout()" style="margin-left:16px;background:none;border:1px solid #6b7280;color:#6b7280;padding:4px 12px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#6b7280';this.style.color='#6b7280'">Logout</button>
     </div>
 </div>
 
@@ -2377,6 +2381,12 @@ async function executePayloadScan() {
         btns.style.display = 'flex';
         btns.innerHTML = '<button class="btn-cancel" onclick="closeModal()">Close</button>';
     }
+}
+
+// ── Logout ───────────────────────────────────────────────────────────────────
+async function doLogout() {
+    try { await fetch('/api/logout', { method: 'POST' }); } catch(e) {}
+    window.location.href = '/login';
 }
 
 // ── WebSocket ────────────────────────────────────────────────────────────────
