@@ -2,6 +2,22 @@
 
 All notable changes to MANTIS are documented in this file.
 
+## [2.4.0] - 2026-02-21
+
+### Added
+- **Elasticsearch honeypot** (`honeypot/services/elasticsearch.py`, port 9200) — emulates open Elasticsearch cluster with `/_search` (data theft), `/_bulk` (injection), `/_scripts` (RCE), `/_snapshot` (exfil), `/_cat/indices`, `/_nodes`, `/_cluster/health`; returns fake customer/transaction data to keep attackers engaged
+- **Kubernetes API honeypot** (`honeypot/services/kubernetes.py`, port 6443) — emulates unauthenticated K8s API server; captures pod creation specs (image, cmd, mounts, env, hostNetwork/hostPID), secret reads (returns honey AWS keys, DB creds, TLS certs), pod exec RCE attempts, namespace/node enumeration
+- **MQTT broker honeypot** (`honeypot/services/mqtt.py`, port 1883) — full MQTT v3.1.1 binary protocol; captures CONNECT credentials, SUBSCRIBE topic filters, PUBLISH payloads (C2 commands, malware URLs) with QoS handling and hex fallback for binary data
+- **Clickable toast alerts** — all alert toast notifications are now clickable, opening the full alert detail modal; payload/IOC toasts show source IP and service name
+- **Event ID drill-down** — event IDs in alert detail modal are clickable links that fetch and display the source event with full payload data
+- **`loadEventById()`** — new JS function for direct event lookup from alert drill-down
+- **79 banner presets** across all 14 services (expanded from 25), including Elasticsearch (8.x, 7.x, OpenSearch), Kubernetes (1.26–1.28, K3s, MicroK8s), MQTT (Mosquitto, EMQX, HiveMQ, VerneMQ)
+
+### Changed
+- Service count increased from 11 to **14** (Elasticsearch, Kubernetes API, MQTT added)
+- Clickable toasts stay visible 8 seconds (up from 5) with hover highlight effect
+- All generic alert toasts are now clickable (not just payload/IOC)
+
 ## [2.3.0] - 2026-02-21
 
 ### Changed

@@ -4,12 +4,12 @@
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat)
 ![AI Assisted](https://img.shields.io/badge/AI-Assisted-blueviolet?style=flat&logo=anthropic&logoColor=white)
-![Honeypot](https://img.shields.io/badge/Honeypot-11_Services-f59e0b?style=flat)
+![Honeypot](https://img.shields.io/badge/Honeypot-14_Services-f59e0b?style=flat)
 ![Async](https://img.shields.io/badge/asyncio-Powered-06b6d4?style=flat&logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Linux-FCC624?style=flat&logo=linux&logoColor=black)
 
 
-**MANTIS** is a multi-protocol network honeypot and threat intelligence platform. It deploys 11 realistic decoy services that mimic production systems, captures attacker credentials, commands, and payloads in real time, and presents everything through a live web dashboard with geolocation mapping and alerting.
+**MANTIS** is a multi-protocol network honeypot and threat intelligence platform. It deploys 14 realistic decoy services that mimic production systems, captures attacker credentials, commands, and payloads in real time, and presents everything through a live web dashboard with geolocation mapping and alerting.
 
 Built entirely in Python with asyncio for high concurrency and zero threads per connection.
 
@@ -19,7 +19,7 @@ Built entirely in Python with asyncio for high concurrency and zero threads per 
 
 ## Features
 
-- **11 honeypot services** with wire-protocol-level fidelity
+- **14 honeypot services** with wire-protocol-level fidelity
 - **Real-time dashboard** with WebSocket live feed, filterable event log, session tracking, and alert management
 - **Attack origin map** with IP geolocation (ip-api.com)
 - **IP blocking / firewall** — click any IP in the dashboard to block it via iptables, manage blocked IPs from the Firewall tab
@@ -44,17 +44,20 @@ Built entirely in Python with asyncio for high concurrency and zero threads per 
 | **VNC** | 5900 | RFB 3.8 handshake, VNC Auth (DES challenge/response capture), ServerInit with fake framebuffer |
 | **Redis** | 6379 | RESP protocol parser, AUTH capture, INFO/KEYS/GET with fake sensitive data, threat detection for CONFIG SET/SLAVEOF/MODULE LOAD |
 | **ADB** | 5555 | Android Debug Bridge binary protocol (CNXN/OPEN/WRTE/CLSE), fake Pixel 7 device, shell command responses |
+| **Elasticsearch** | 9200 | REST API emulating open cluster — `/_search` (data theft), `/_bulk` (injection), `/_scripts` (RCE), `/_snapshot` (exfil), fake customer/transaction indices |
+| **Kubernetes** | 6443 | Unauthenticated K8s API server — pod creation specs, secret reads (honey AWS keys, DB creds), pod exec RCE, namespace/node enumeration |
+| **MQTT** | 1883 | Full MQTT v3.1.1 binary protocol — CONNECT credentials, SUBSCRIBE topic filters, PUBLISH payloads (C2, malware URLs) with QoS handling |
 
 ---
 
 ## Screenshots
 
 
-### Events — Filterable event log with clickable IPs across all 11 services
+### Events — Filterable event log with clickable IPs across all 14 services
 
 ![Events](screenshots/02_events.png)
 
-### Sessions — All connections across 11 services with color-coded badges
+### Sessions — All connections across 14 services with color-coded badges
 
 ![Sessions](screenshots/03_sessions.png)
 
@@ -111,6 +114,9 @@ This launches a single-screen interactive setup:
     [x] VNC       :5900
     [x] REDIS     :6379
     [x] ADB       :5555
+    [x] ELASTIC   :9200
+    [x] K8S       :6443
+    [x] MQTT      :1883
     ────────────────────────────
     [x] DASHBOARD :8843
 ```
@@ -168,7 +174,7 @@ python main.py stats --db /path/to/honeypot.db
 
 Profiles are YAML files that control which services are enabled and on which ports.
 
-**`default.yaml`** — All 11 services enabled with standard banners:
+**`default.yaml`** — All 14 services enabled with standard banners:
 
 ```yaml
 ssh:
@@ -182,7 +188,7 @@ mysql:
   enabled: true
   port: 3306
   banner: "5.7.42-0ubuntu0.18.04.1"
-# ... all 11 services
+# ... all 14 services
 ```
 
 **`minimal.yaml`** — SSH + Docker only (lightweight):
@@ -241,6 +247,7 @@ The dashboard exposes a REST API on the same port:
 | `/api/firewall/blocked` | GET | List currently blocked IPs |
 | `/api/firewall/block` | POST | Block an IP via iptables (`{"ip": "x.x.x.x"}`) |
 | `/api/firewall/unblock` | POST | Unblock an IP (`{"ip": "x.x.x.x"}`) |
+| `/api/payload-stats` | GET | Payload intel — severity counts, pattern frequency, IOC totals, timeline |
 | `/api/database/reset` | POST | Reset the database |
 | `/ws` | WebSocket | Real-time event stream |
 
@@ -248,7 +255,7 @@ The dashboard exposes a REST API on the same port:
 
 ## Testing
 
-The included endpoint tester generates traffic across all 11 services and validates every dashboard API endpoint:
+The included endpoint tester generates traffic across all 14 services and validates every dashboard API endpoint:
 
 ```bash
 python test_endpoints.py
@@ -274,8 +281,11 @@ Target: 127.0.0.1
   [PASS] Redis      ping: +PONG, auth: +OK
   [PASS] ADB        device: Pixel 7
   [PASS] ADB shell  uid=0(root) gid=0(root)
+  [PASS] Elastic    cluster: elasticsearch, version: 8.12.0
+  [PASS] K8s        /version: v1.28.2, /api/v1: 200
+  [PASS] MQTT       CONNACK received, session established
   ...
-  30 passed, 0 failed out of 30 checks
+  36 passed, 0 failed out of 36 checks
 ```
 
 ---
@@ -308,7 +318,10 @@ honeypot/
 │   ├── mongodb.py       # MongoDB (custom BSON codec)
 │   ├── vnc.py           # VNC/RFB
 │   ├── redis.py         # Redis (RESP protocol)
-│   └── adb.py           # Android Debug Bridge
+│   ├── adb.py           # Android Debug Bridge
+│   ├── elasticsearch.py # Elasticsearch (REST API)
+│   ├── kubernetes.py    # Kubernetes API Server
+│   └── mqtt.py          # MQTT Broker (v3.1.1)
 profiles/
 ├── default.yaml         # All services
 ├── minimal.yaml         # SSH + Docker
