@@ -21,17 +21,45 @@ class BaseHoneypotService(ABC):
         self.geo = geo_locator
         self.logger = logging.getLogger(f"honeypot.{self.service_name}")
         self._server = None
+        self._active_tasks: set[asyncio.Task] = set()
 
     @abstractmethod
     async def start(self):
         """Start the service."""
 
+    def _tracked_handler(self, handler):
+        """Return a wrapper that tracks each client connection as a task."""
+        async def wrapper(reader, writer):
+            task = asyncio.current_task()
+            self._active_tasks.add(task)
+            try:
+                await handler(reader, writer)
+            except asyncio.CancelledError:
+                pass
+            finally:
+                self._active_tasks.discard(task)
+                try:
+                    writer.close()
+                    await writer.wait_closed()
+                except Exception:
+                    pass
+        return wrapper
+
     async def stop(self):
-        """Stop the service."""
+        """Stop the service and cancel active client connections."""
         if self._server:
             self._server.close()
             await self._server.wait_closed()
+        # Cancel all active client handler tasks
+        for task in list(self._active_tasks):
+            task.cancel()
+        if self._active_tasks:
+            await asyncio.gather(*self._active_tasks, return_exceptions=True)
+            self.logger.info("%s service stopped (%d connections closed)",
+                             self.service_name.upper(), len(self._active_tasks))
+        else:
             self.logger.info("%s service stopped", self.service_name.upper())
+        self._active_tasks.clear()
 
     async def _create_session(self, src_ip: str, src_port: int, dst_port: int, **metadata) -> Session:
         session = Session(

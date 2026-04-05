@@ -913,4 +913,4 @@ class Database:
         if self._conn:
             self._conn.close()
             self._conn = None
-        self._executor.shutdown(wait=False)
+        self._executor.shutdown(wait=True)

@@ -25,7 +25,7 @@ class VNCHoneypot(BaseHoneypotService):
     async def start(self):
         port = self.config.port
         self._server = await asyncio.start_server(
-            self._handle_client, "0.0.0.0", port,
+            self._tracked_handler(self._handle_client), "0.0.0.0", port,
         )
         self.logger.info("VNC honeypot listening on port %d", port)
 

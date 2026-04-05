@@ -75,7 +75,7 @@ class TelnetHoneypot(BaseHoneypotService):
     async def start(self):
         port = self.config.port
         banner = self.config.banner or "gateway-01 login: "
-        handler = lambda r, w: self._handle_client(r, w, banner)
+        handler = self._tracked_handler(lambda r, w: self._handle_client(r, w, banner))
         self._server = await asyncio.start_server(handler, "0.0.0.0", port)
         self.logger.info("Telnet honeypot listening on port %d", port)
 

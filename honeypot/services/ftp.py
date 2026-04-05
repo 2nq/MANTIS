@@ -22,7 +22,7 @@ class FTPHoneypot(BaseHoneypotService):
         port = self.config.port
         banner = self.config.banner or "220 FTP Server ready."
         self._server = await asyncio.start_server(
-            lambda r, w: self._handle_client(r, w, banner),
+            self._tracked_handler(lambda r, w: self._handle_client(r, w, banner)),
             "0.0.0.0", port,
         )
         self.logger.info("FTP honeypot listening on port %d", port)

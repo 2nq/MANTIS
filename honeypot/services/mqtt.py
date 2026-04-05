@@ -78,15 +78,9 @@ class MQTTHoneypot(BaseHoneypotService):
     async def start(self):
         port = self.config.port
         self._server = await asyncio.start_server(
-            self._handle_client, "0.0.0.0", port,
+            self._tracked_handler(self._handle_client), "0.0.0.0", port,
         )
         self.logger.info("MQTT honeypot listening on port %d", port)
-
-    async def stop(self):
-        if hasattr(self, "_server") and self._server:
-            self._server.close()
-            await self._server.wait_closed()
-        self.logger.info("MQTT service stopped")
 
     async def _handle_client(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         addr = writer.get_extra_info("peername")

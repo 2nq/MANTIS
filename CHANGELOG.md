@@ -2,6 +2,23 @@
 
 All notable changes to MANTIS are documented in this file.
 
+## [2.5.0] - 2026-04-05
+
+### Added
+- **Health check endpoint** — `GET /api/health` (unauthenticated) returns service status, active connection counts per service, and uptime; useful for external monitoring (Uptime Kuma, Prometheus blackbox)
+- **Dark/light theme toggle** — button in the dashboard header switches between dark and light themes; preference persisted in localStorage
+- **CSV export across all tabs** — Events, Sessions, and Alerts tabs now have JSON and CSV export buttons; backend `?format=csv` already existed but was only exposed in Database and Attackers tabs
+- **Per-service active connection counts** — honeypot status blobs in the overview now show a green badge with the number of currently connected clients
+
+### Changed
+- **Login brute-force protection** — `/api/auth` now tracks failed attempts per IP; after 10 failures, the IP is locked out for 5 minutes (429 response with countdown)
+- **Session expiry** — dashboard sessions now include a `created_at` timestamp and are automatically evicted after 7 days; hourly cleanup task removes stale entries
+- **Path traversal fix** — `POST /api/config/save` now restricts the `path` parameter to a basename (no directory components or dotfiles), preventing writes outside the project directory
+- **Query parameter validation** — all `limit`/`offset` query parameters across 5 endpoints now use safe int parsing; invalid values (e.g. `?limit=abc`) return the default instead of a 500 error
+- **Graceful shutdown of active connections** — `BaseHoneypotService.stop()` now tracks and cancels all in-flight `_handle_client` tasks for the 10 TCP-based services, preventing connections from hanging after Ctrl-C
+- **WebSocket broadcast race fix** — all WebSocket broadcast loops now snapshot the `WeakSet` to a list before iterating, preventing iterator invalidation under concurrent connect/disconnect
+- **ThreadPoolExecutor cleanup** — `Database.close()` now calls `shutdown(wait=True)` instead of `wait=False`, ensuring pending DB operations complete before exit
+
 ## [2.4.0] - 2026-02-21
 
 ### Added

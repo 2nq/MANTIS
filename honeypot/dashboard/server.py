@@ -5,9 +5,11 @@ import csv
 import io
 import json
 import logging
+import os
 import secrets
 import shutil
 import subprocess
+import time
 import weakref
 
 from aiohttp import web
@@ -33,6 +35,14 @@ class DashboardServer:
         self._blocked_ips: set[str] = set()
         self._has_iptables = shutil.which("iptables") is not None
         self._sessions: dict[str, dict] = {}
+        self._session_expiry = 86400 * 7  # 7 days
+
+        # Login brute-force protection: {ip: (fail_count, last_fail_time)}
+        self._login_attempts: dict[str, tuple[int, float]] = {}
+        self._max_login_attempts = 10
+        self._login_lockout_seconds = 300  # 5 min lockout
+
+        self._start_time = time.time()
 
         self._app.middlewares.append(self._auth_middleware)
 
@@ -66,14 +76,39 @@ class DashboardServer:
         self._app.router.add_post("/api/sessions/delete", self._handle_delete_sessions)
         self._app.router.add_post("/api/events/delete-filtered", self._handle_delete_events_filtered)
         self._app.router.add_post("/api/payload-scan", self._handle_payload_scan)
+        self._app.router.add_get("/api/health", self._handle_health)
         self._app.router.add_get("/api/firewall/blocked", self._handle_get_blocked)
         self._app.router.add_post("/api/firewall/block", self._handle_block_ip)
         self._app.router.add_post("/api/firewall/unblock", self._handle_unblock_ip)
+
+    def _is_session_valid(self, token: str) -> bool:
+        """Check if a session token exists and hasn't expired."""
+        session = self._sessions.get(token)
+        if not session:
+            return False
+        created = session.get("created_at", 0)
+        if time.time() - created > self._session_expiry:
+            self._sessions.pop(token, None)
+            return False
+        return True
+
+    async def _session_cleanup_loop(self):
+        """Periodically remove expired sessions."""
+        while True:
+            await asyncio.sleep(3600)  # every hour
+            now = time.time()
+            expired = [t for t, s in self._sessions.items()
+                       if now - s.get("created_at", 0) > self._session_expiry]
+            for t in expired:
+                self._sessions.pop(t, None)
+            if expired:
+                logger.debug("Cleaned up %d expired sessions", len(expired))
 
     async def start(self):
         self._event_queue = self._db.subscribe_events()
         self._alert_queue = self._db.subscribe_alerts()
         self._broadcast_task = asyncio.create_task(self._broadcaster())
+        self._cleanup_task = asyncio.create_task(self._session_cleanup_loop())
 
         self._runner = web.AppRunner(self._app)
         await self._runner.setup()
@@ -85,12 +120,13 @@ class DashboardServer:
         )
 
     async def stop(self):
-        if self._broadcast_task:
-            self._broadcast_task.cancel()
-            try:
-                await self._broadcast_task
-            except asyncio.CancelledError:
-                pass
+        for task in (self._broadcast_task, getattr(self, '_cleanup_task', None)):
+            if task:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
         if self._event_queue:
             self._db.unsubscribe_events(self._event_queue)
         if self._alert_queue:
@@ -127,7 +163,7 @@ class DashboardServer:
                     continue
 
                 dead = []
-                for ws in self._websockets:
+                for ws in list(self._websockets):
                     try:
                         await ws.send_str(msg)
                     except Exception:
@@ -138,7 +174,7 @@ class DashboardServer:
     @web.middleware
     async def _auth_middleware(self, request: web.Request, handler):
         # Allow login page and auth endpoint without session
-        if request.path in ("/login", "/api/auth"):
+        if request.path in ("/login", "/api/auth", "/api/health"):
             return await handler(request)
         # Check cookie or Authorization header
         token = request.cookies.get("mantis_token")
@@ -146,12 +182,12 @@ class DashboardServer:
             auth_header = request.headers.get("Authorization", "")
             if auth_header.startswith("Bearer "):
                 token = auth_header[7:]
-        if token and token in self._sessions:
+        if token and self._is_session_valid(token):
             return await handler(request)
         # WebSocket — check token in query string
         if request.path == "/ws":
             qs_token = request.query.get("token")
-            if qs_token and qs_token in self._sessions:
+            if qs_token and self._is_session_valid(qs_token):
                 return await handler(request)
         # Redirect HTML requests to login, reject API with 401
         if request.path.startswith("/api") or request.path == "/ws":
@@ -162,6 +198,20 @@ class DashboardServer:
         return web.Response(text=LOGIN_HTML, content_type="text/html")
 
     async def _handle_auth(self, request: web.Request) -> web.Response:
+        # Brute-force protection
+        client_ip = request.remote or "unknown"
+        attempts = self._login_attempts.get(client_ip)
+        if attempts:
+            fail_count, last_fail = attempts
+            if fail_count >= self._max_login_attempts and (time.time() - last_fail) < self._login_lockout_seconds:
+                remaining = int(self._login_lockout_seconds - (time.time() - last_fail))
+                return web.json_response(
+                    {"error": f"too many failed attempts, retry in {remaining}s"}, status=429
+                )
+            # Reset if lockout period has passed
+            if (time.time() - last_fail) >= self._login_lockout_seconds:
+                self._login_attempts.pop(client_ip, None)
+
         try:
             body = await request.json()
         except Exception:
@@ -170,11 +220,18 @@ class DashboardServer:
         password = body.get("password", "")
         user = await self._db.authenticate_user(username, password)
         if user:
+            self._login_attempts.pop(client_ip, None)
             session_token = secrets.token_urlsafe(32)
-            self._sessions[session_token] = {"username": user["username"], "id": user["id"]}
+            self._sessions[session_token] = {
+                "username": user["username"], "id": user["id"],
+                "created_at": time.time(),
+            }
             resp = web.json_response({"status": "ok"})
-            resp.set_cookie("mantis_token", session_token, httponly=True, samesite="Strict", max_age=86400 * 7)
+            resp.set_cookie("mantis_token", session_token, httponly=True, samesite="Strict", max_age=self._session_expiry)
             return resp
+        # Track failed attempt
+        prev = self._login_attempts.get(client_ip, (0, 0))
+        self._login_attempts[client_ip] = (prev[0] + 1, time.time())
         return web.json_response({"error": "invalid credentials"}, status=403)
 
     async def _handle_logout(self, request: web.Request) -> web.Response:
@@ -204,6 +261,13 @@ class DashboardServer:
         await self._db.change_password(session["username"], new_password)
         return web.json_response({"status": "ok"})
 
+    @staticmethod
+    def _parse_int(value: str, default: int) -> int:
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return default
+
     async def _handle_dashboard(self, request: web.Request) -> web.Response:
         return web.Response(text=DASHBOARD_HTML, content_type="text/html")
 
@@ -230,8 +294,8 @@ class DashboardServer:
 
     async def _handle_events(self, request: web.Request) -> web.Response:
         try:
-            limit = min(int(request.query.get("limit", 100)), 1000)
-            offset = int(request.query.get("offset", 0))
+            limit = min(self._parse_int(request.query.get("limit", "100"), 100), 1000)
+            offset = self._parse_int(request.query.get("offset", "0"), 0)
             service = request.query.get("service")
             event_type = request.query.get("type")
             src_ip = request.query.get("ip")
@@ -257,8 +321,8 @@ class DashboardServer:
 
     async def _handle_sessions(self, request: web.Request) -> web.Response:
         try:
-            limit = min(int(request.query.get("limit", 100)), 1000)
-            offset = int(request.query.get("offset", 0))
+            limit = min(self._parse_int(request.query.get("limit", "100"), 100), 1000)
+            offset = self._parse_int(request.query.get("offset", "0"), 0)
             src_ip = request.query.get("ip")
             service = request.query.get("service")
             services_param = request.query.get("services")
@@ -277,7 +341,7 @@ class DashboardServer:
 
     async def _handle_alerts(self, request: web.Request) -> web.Response:
         try:
-            limit = min(int(request.query.get("limit", 100)), 1000)
+            limit = min(self._parse_int(request.query.get("limit", "100"), 100), 1000)
             unacked = request.query.get("unacknowledged", "").lower() in ("1", "true", "yes")
             data = await self._db.get_alerts(limit=limit, unacknowledged_only=unacked)
             return web.json_response(data)
@@ -345,7 +409,7 @@ class DashboardServer:
         # Broadcast config change to WebSocket clients
         msg = json.dumps({"type": "config_change", "data": new_config})
         dead = []
-        for ws in self._websockets:
+        for ws in list(self._websockets):
             try:
                 await ws.send_str(msg)
             except Exception:
@@ -365,7 +429,7 @@ class DashboardServer:
         # Broadcast
         msg = json.dumps({"type": "config_change", "data": new_config})
         dead = []
-        for ws in self._websockets:
+        for ws in list(self._websockets):
             try:
                 await ws.send_str(msg)
             except Exception:
@@ -381,7 +445,9 @@ class DashboardServer:
             body = await request.json() if request.content_length else {}
         except Exception:
             body = {}
-        path = body.get("path", "mantis_config.yaml")
+        path = os.path.basename(body.get("path", "mantis_config.yaml"))
+        if not path or path.startswith("."):
+            return web.json_response({"error": "invalid filename"}, status=400)
         try:
             abs_path = self._orchestrator.save_running_config(path)
             return web.json_response({"status": "ok", "path": abs_path})
@@ -430,7 +496,7 @@ class DashboardServer:
             await self._orchestrator.reset_database()
             msg = json.dumps({"type": "database_reset"})
             dead = []
-            for ws in self._websockets:
+            for ws in list(self._websockets):
                 try:
                     await ws.send_str(msg)
                 except Exception:
@@ -446,8 +512,8 @@ class DashboardServer:
 
     async def _handle_attackers(self, request: web.Request) -> web.Response:
         try:
-            limit = min(int(request.query.get("limit", 100)), 1000)
-            offset = int(request.query.get("offset", 0))
+            limit = min(self._parse_int(request.query.get("limit", "100"), 100), 1000)
+            offset = self._parse_int(request.query.get("offset", "0"), 0)
             data = await self._db.get_attackers(limit=limit, offset=offset)
             return web.json_response(data)
         except Exception as e:
@@ -503,7 +569,7 @@ class DashboardServer:
         """Helper to broadcast a JSON message to all WebSocket clients."""
         msg = json.dumps(msg_dict)
         dead = []
-        for ws in self._websockets:
+        for ws in list(self._websockets):
             try:
                 await ws.send_str(msg)
             except Exception:
@@ -637,6 +703,25 @@ class DashboardServer:
             logger.exception("Payload scan failed")
             return web.json_response({"error": str(e)}, status=500)
 
+    # ── Health ─────────────────────────────────────────────────────────────
+
+    async def _handle_health(self, request: web.Request) -> web.Response:
+        services = {}
+        if self._orchestrator:
+            for svc in self._orchestrator.services:
+                active = len(getattr(svc, '_active_tasks', set()))
+                services[svc.service_name] = {
+                    "port": svc.config.port,
+                    "active_connections": active,
+                }
+        uptime = int(time.time() - self._start_time)
+        return web.json_response({
+            "status": "ok",
+            "uptime_seconds": uptime,
+            "services": services,
+            "total_services": len(services),
+        })
+
     # ── Firewall / IP blocking ────────────────────────────────────────────
 
     async def _run_iptables(self, action: str, ip: str) -> tuple[bool, str]:
@@ -678,7 +763,7 @@ class DashboardServer:
             # Broadcast to WebSocket clients
             msg = json.dumps({"type": "ip_blocked", "data": {"ip": ip}})
             dead = []
-            for ws in self._websockets:
+            for ws in list(self._websockets):
                 try:
                     await ws.send_str(msg)
                 except Exception:
@@ -708,7 +793,7 @@ class DashboardServer:
         # Broadcast to WebSocket clients
         msg = json.dumps({"type": "ip_unblocked", "data": {"ip": ip}})
         dead = []
-        for ws in self._websockets:
+        for ws in list(self._websockets):
             try:
                 await ws.send_str(msg)
             except Exception:

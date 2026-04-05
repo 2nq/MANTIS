@@ -81,6 +81,20 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
     --pink: #ec4899;
     --mantis-glow: rgba(245, 158, 11, 0.10);
 }
+html.light {
+    --bg-primary: #f3f4f6;
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --border: #d1d5db;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --mantis-glow: rgba(245, 158, 11, 0.15);
+}
+html.light .leaflet-container { background: #e5e7eb !important; }
+html.light .leaflet-popup-content-wrapper { background: #fff !important; color: #111827 !important; border-color: #d1d5db !important; }
+html.light .leaflet-popup-tip { background: #fff !important; border-color: #d1d5db !important; }
+.theme-toggle { background:none; border:1px solid var(--text-secondary); color:var(--text-secondary); padding:4px 10px; border-radius:4px; font-family:inherit; font-size:11px; cursor:pointer; margin-left:8px; }
+.theme-toggle:hover { border-color:var(--accent); color:var(--accent); }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: var(--bg-primary); color: var(--text-primary); overflow-x: hidden; }
 
@@ -459,7 +473,8 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
         <span style="color:#6b7280;font-size:11px;margin-right:12px">WATCH. WAIT. CAPTURE.</span>
         <div class="dot" id="wsDot"></div>
         <span id="wsStatus">Connecting...</span>
-        <button onclick="doLogout()" style="margin-left:16px;background:none;border:1px solid #6b7280;color:#6b7280;padding:4px 12px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#6b7280';this.style.color='#6b7280'">Logout</button>
+        <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="Toggle light/dark theme">Light</button>
+        <button onclick="doLogout()" style="margin-left:8px;background:none;border:1px solid #6b7280;color:#6b7280;padding:4px 12px;border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#6b7280';this.style.color='#6b7280'">Logout</button>
     </div>
 </div>
 
@@ -488,6 +503,11 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
                 <div class="stat-box success"><div class="stat-value" id="statIPs">0</div><div class="stat-label">Unique IPs</div></div>
                 <div class="stat-box critical"><div class="stat-value" id="statAlerts">0</div><div class="stat-label">Alerts</div></div>
                 <div class="stat-box warning"><div class="stat-value" id="statServices">0</div><div class="stat-label">Services</div></div>
+            </div>
+            <div id="healthBar" style="display:flex;align-items:center;gap:16px;margin-top:12px;padding:8px 12px;background:var(--bg-primary);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-secondary)">
+                <span>Uptime: <strong style="color:var(--text-primary)" id="healthUptime">-</strong></span>
+                <span>Active Connections: <strong style="color:var(--green)" id="healthConns">0</strong></span>
+                <span style="margin-left:auto;font-size:10px;opacity:0.6">GET /api/health</span>
             </div>
         </div>
     </div>
@@ -627,6 +647,8 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
     <button onclick="evtPage(-1)" id="evtPrev" disabled>Prev</button>
     <span id="evtPageInfo">Page 1</span>
     <button onclick="evtPage(1)" id="evtNext">Next</button>
+    <button onclick="exportTable('events','json')" style="margin-left:12px">&#x2913; JSON</button>
+    <button onclick="exportTable('events','csv')">&#x2913; CSV</button>
 </div>
 </div>
 
@@ -674,6 +696,8 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
     <button onclick="sessPage(-1)" id="sessPrev" disabled>Prev</button>
     <span id="sessPageInfo">Page 1</span>
     <button onclick="sessPage(1)" id="sessNext">Next</button>
+    <button onclick="exportTable('sessions','json')" style="margin-left:12px">&#x2913; JSON</button>
+    <button onclick="exportTable('sessions','csv')">&#x2913; CSV</button>
 </div>
 </div>
 
@@ -777,7 +801,8 @@ body { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; background: v
     <div class="pi-header-actions">
         <button onclick="openPayloadScanModal()">&#x1F50D; Scan Database</button>
         <button onclick="loadPayloadIntel()">&#x21BB; Refresh</button>
-        <button onclick="exportTable('alerts','json')">&#x2913; Export</button>
+        <button onclick="exportTable('alerts','json')">&#x2913; JSON</button>
+        <button onclick="exportTable('alerts','csv')">&#x2913; CSV</button>
     </div>
 </div>
 
@@ -1262,7 +1287,7 @@ function drawDonut(canvasId, legendId, dataMap, colorMap) {
         ctx.fill();
         angle += slice;
     });
-    ctx.beginPath(); ctx.arc(cx, cy, ir - 1, 0, Math.PI * 2); ctx.fillStyle = '#141517'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx, cy, ir - 1, 0, Math.PI * 2); ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#141517'; ctx.fill();
     ctx.fillStyle = '#e2e4e8'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(total, cx, cy);
     const legend = document.getElementById(legendId);
@@ -2496,18 +2521,41 @@ function connectWS() {
 // ── Active Honeypots Blobs ────────────────────────────────────────────────────
 async function loadActiveHoneypots() {
     try {
-        const config = await apiFetch('/api/config');
+        const [config, health] = await Promise.all([apiFetch('/api/config'), apiFetch('/api/health')]);
         const container = document.getElementById('activeHoneypots');
         if (!container) return;
+        const hSvc = health.services || {};
+        const totalConns = Object.values(hSvc).reduce((s, v) => s + (v.active_connections || 0), 0);
+        const up = health.uptime_seconds || 0;
+        const days = Math.floor(up / 86400), hrs = Math.floor((up % 86400) / 3600), mins = Math.floor((up % 3600) / 60);
+        const uptimeStr = days > 0 ? `${days}d ${hrs}h ${mins}m` : hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+        const el = id => document.getElementById(id);
+        if (el('healthUptime')) el('healthUptime').textContent = uptimeStr;
+        if (el('healthConns')) el('healthConns').textContent = totalConns;
         const svcOrder = ['ssh','docker','ftp','smb','mysql','telnet','smtp','mongodb','vnc','redis','adb','elasticsearch','kubernetes','mqtt'];
         container.innerHTML = svcOrder.map(name => {
             const svc = config[name];
             if (!svc) return '';
             const active = svc.enabled;
-            return `<div class="hp-blob ${active ? 'active' : 'inactive'}"><span class="hp-dot"></span>${name.toUpperCase()} <span class="hp-port">:${svc.port}</span></div>`;
+            const conns = (hSvc[name] && hSvc[name].active_connections) || 0;
+            const connBadge = active && conns > 0 ? `<span style="background:var(--green);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;margin-left:4px">${conns}</span>` : '';
+            return `<div class="hp-blob ${active ? 'active' : 'inactive'}"><span class="hp-dot"></span>${name.toUpperCase()} <span class="hp-port">:${svc.port}</span>${connBadge}</div>`;
         }).join('');
     } catch(e) {}
 }
+
+// ── Theme toggle ─────────────────────────────────────────────────────────────
+function toggleTheme() {
+    const isLight = document.documentElement.classList.toggle('light');
+    localStorage.setItem('mantis-theme', isLight ? 'light' : 'dark');
+    document.getElementById('themeBtn').textContent = isLight ? 'Dark' : 'Light';
+}
+(function initTheme() {
+    if (localStorage.getItem('mantis-theme') === 'light') {
+        document.documentElement.classList.add('light');
+        document.getElementById('themeBtn').textContent = 'Dark';
+    }
+})();
 
 // ── Init ─────────────────────────────────────────────────────────────────────
 loadBlockedIPs();

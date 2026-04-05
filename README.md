@@ -1,105 +1,71 @@
+<div align="center">
 
-# MANTIS - Honeypot Deployment Kit
+# MANTIS
 
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green?style=flat)
-![AI Assisted](https://img.shields.io/badge/AI-Assisted-blueviolet?style=flat&logo=anthropic&logoColor=white)
-![Honeypot](https://img.shields.io/badge/Honeypot-14_Services-f59e0b?style=flat)
-![Async](https://img.shields.io/badge/asyncio-Powered-06b6d4?style=flat&logo=python&logoColor=white)
-![Platform](https://img.shields.io/badge/Platform-Linux-FCC624?style=flat&logo=linux&logoColor=black)
+### Multi-Protocol Network Honeypot & Threat Intelligence Platform
 
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
+[![Services](https://img.shields.io/badge/Honeypots-14_Services-f59e0b?style=for-the-badge)](README.md#supported-services)
+[![Async](https://img.shields.io/badge/100%25-asyncio-06b6d4?style=for-the-badge&logo=python&logoColor=white)](README.md#architecture)
+[![Platform](https://img.shields.io/badge/Platform-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](README.md)
 
-**MANTIS** is a multi-protocol network honeypot and threat intelligence platform. It deploys 14 realistic decoy services that mimic production systems, captures attacker credentials, commands, and payloads in real time, and presents everything through a live web dashboard with geolocation mapping and alerting.
+Deploy 14 realistic decoy services that mimic production systems. Capture attacker credentials, commands, and payloads in real time. Analyze everything through a live dashboard with geolocation mapping, automated threat detection, and one-click IP blocking.
 
-Built entirely in Python with asyncio for high concurrency and zero threads per connection.
+Built entirely in Python — zero threads, pure asyncio concurrency.
 
-<img width="2504" height="1305" alt="image" src="https://github.com/user-attachments/assets/b7af8ffd-e6e6-4ff1-a389-fff02ba12a42" />
+<br>
 
----
+<img src="https://github.com/user-attachments/assets/b7af8ffd-e6e6-4ff1-a389-fff02ba12a42" alt="MANTIS Dashboard" width="100%">
 
-## Features
+</div>
 
-- **14 honeypot services** with wire-protocol-level fidelity
-- **Real-time dashboard** with WebSocket live feed, filterable event log, session tracking, and alert management
-- **Attack origin map** with IP geolocation (ip-api.com)
-- **IP blocking / firewall** — click any IP in the dashboard to block it via iptables, manage blocked IPs from the Firewall tab
-- **Automated alerts** — reconnaissance detection, credential harvesting, SQL injection, shell commands
-- **Profile system** — switch between minimal, database-trap, and full deployments with YAML configs
-- **SQLite storage** with full-text search, JSON export, and database management
-- **Zero external dependencies** for service emulation (pure Python protocol implementations)
+<br>
 
----
-## Supported Services
+## Highlights
 
-| Service | Default Port | Protocol Detail |
-|---------|-------------|-----------------|
-| **SSH** | 2222 | Full Paramiko-based SSH server with shell emulation, command logging, and credential capture |
-| **Docker** | 2375 | Docker Engine API v1.41 honeypot — captures container create/start, image pull, version/info probes from cryptominer bots |
-| **FTP** | 21 | RFC 959 implementation with USER/PASS capture, fake directory listings, and file transfer logging |
-| **SMB** | 4450 | SMB1/SMB2 negotiate + NTLM authentication capture with session setup |
-| **MySQL** | 3306 | Full handshake (v10 protocol), authentication, and COM_QUERY logging |
-| **Telnet** | 23 | Interactive shell with login prompt, command history, and fake filesystem responses |
-| **SMTP** | 25 | RFC 5321 with EHLO, AUTH LOGIN/PLAIN (base64 credential decode), MAIL FROM/RCPT TO/DATA capture |
-| **MongoDB** | 27017 | OP_QUERY + OP_MSG wire protocol, custom BSON codec, isMaster/saslStart auth, listDatabases |
-| **VNC** | 5900 | RFB 3.8 handshake, VNC Auth (DES challenge/response capture), ServerInit with fake framebuffer |
-| **Redis** | 6379 | RESP protocol parser, AUTH capture, INFO/KEYS/GET with fake sensitive data, threat detection for CONFIG SET/SLAVEOF/MODULE LOAD |
-| **ADB** | 5555 | Android Debug Bridge binary protocol (CNXN/OPEN/WRTE/CLSE), fake Pixel 7 device, shell command responses |
-| **Elasticsearch** | 9200 | REST API emulating open cluster — `/_search` (data theft), `/_bulk` (injection), `/_scripts` (RCE), `/_snapshot` (exfil), fake customer/transaction indices |
-| **Kubernetes** | 6443 | Unauthenticated K8s API server — pod creation specs, secret reads (honey AWS keys, DB creds), pod exec RCE, namespace/node enumeration |
-| **MQTT** | 1883 | Full MQTT v3.1.1 binary protocol — CONNECT credentials, SUBSCRIBE topic filters, PUBLISH payloads (C2, malware URLs) with QoS handling |
+<table>
+<tr>
+<td width="50%">
 
----
+**14 Protocol-Level Honeypots**
+SSH, Docker API, FTP, SMB, MySQL, Telnet, SMTP, MongoDB, VNC, Redis, ADB, Elasticsearch, Kubernetes API, MQTT — each implementing its wire protocol from scratch (no external server daemons).
 
-## Screenshots
+</td>
+<td width="50%">
 
+**Real-Time Web Dashboard**
+Live WebSocket event stream, filterable logs, session tracking, severity-based alerts, and interactive attack origin map — all in a single-page app served on port 8843.
 
-### Events — Filterable event log with clickable IPs across all 14 services
+</td>
+</tr>
+<tr>
+<td width="50%">
 
-![Events](screenshots/02_events.png)
+**Automated Threat Detection**
+50+ pattern rules detect Log4Shell, reverse shells, cryptominers, credential harvesting, SQL injection, privilege escalation, and encoded payloads with IOC extraction (URLs, hashes, IPs).
 
-### Sessions — All connections across 14 services with color-coded badges
+</td>
+<td width="50%">
 
-![Sessions](screenshots/03_sessions.png)
+**One-Click Firewall**
+Block attacker IPs via iptables directly from the dashboard. Click any IP in the event log to block it, or manage rules from the dedicated Firewall tab.
 
-### Alerts — Severity-based threat alerts (Critical / High / Medium) with acknowledgment
-
-![Alerts](screenshots/04_alerts.png)
-
-### Database — Advanced search with service/type filters, date range, and JSON export
-
-![Database](screenshots/05_database.png)
-
-### Firewall — Block/unblock attacker IPs via iptables directly from the dashboard
-
-![Firewall](screenshots/09_firewall.png)
-
-### Config — Service-specific settings, banner presets, global config, save/export
-
-![Config](screenshots/07_config.png)
+</td>
+</tr>
+</table>
 
 ---
 
 ## Quick Start
 
-### Requirements
-
-- Python 3.10+
-- pip
-
-### Install
-
 ```bash
 git clone https://github.com/Syn2Much/MANTIS.git && cd MANTIS
 pip install -r requirements.txt
-```
-
-### Run (Interactive)
-
-```bash
 python main.py
 ```
 
-This launches a single-screen interactive setup:
+This launches an interactive setup where you toggle services and configure ports:
 
 ```
 ? Select services & configure ports (space = toggle, → = set port, enter = confirm)
@@ -121,144 +87,170 @@ This launches a single-screen interactive setup:
     [x] DASHBOARD :8843
 ```
 
-- **Space** — toggle a service on/off
-- **→** — edit the port for the highlighted service inline
-- **a** — toggle all on/off
-- **Enter** — confirm and proceed to auth token prompt
+| Key | Action |
+|-----|--------|
+| **Space** | Toggle service on/off |
+| **→** | Edit port inline |
+| **a** | Toggle all |
+| **Enter** | Confirm and start |
 
-The dashboard starts at **<http://localhost:8843>** by default.
+Dashboard opens at **http://localhost:8843** — default login is `admin` / `admin`.
 
-### Run (Headless)
+### Headless Mode
 
-For scripts, systemd, Docker, or CI — skip all prompts:
+For scripted deployments, systemd, or Docker — skip all prompts:
 
 ```bash
-# All defaults, no prompts
-python main.py --headless
-
-# Load from YAML config, no prompts
-python main.py --headless --config profiles/default.yaml
+python main.py --headless                                # all defaults
+python main.py --headless --config profiles/default.yaml # from YAML profile
 ```
-
-### Dashboard Authentication
-
-The dashboard uses username/password authentication with session-based auth. Default credentials are **admin:admin** — change the password after first login. API requests can authenticate via:
-
-- **Cookie** — set automatically after login
-- **Bearer token** — `Authorization: Bearer <session_token>`
-- **WebSocket** — session token passed as query parameter
 
 ### CLI Options
 
 ```
 python main.py [options]
 
-Options:
-  --headless               Non-interactive mode (all defaults)
-  -c, --config FILE        YAML config file path
-  --db PATH                Database file path
-  -v, --verbose            Debug logging
-  -q, --quiet              Errors only
+  --headless           Non-interactive mode (all defaults)
+  -c, --config FILE    YAML config file path
+  --db PATH            Database file path
+  -v, --verbose        Debug logging
+  -q, --quiet          Errors only
+  --version            Show version
+
+python main.py stats               # view capture statistics
+python main.py stats --db FILE     # from specific database
 ```
 
-### Statistics
+---
+
+## Supported Services
+
+| Service | Port | What It Captures |
+|:--------|:-----|:-----------------|
+| **SSH** | 2222 | Credentials, shell commands, interactive session replay (Paramiko) |
+| **Docker** | 2375 | Container create/start payloads, image pulls, version/info probes (Engine API v1.41) |
+| **FTP** | 21 | USER/PASS, directory traversal, file transfer attempts (RFC 959) |
+| **SMB** | 4450 | SMB1/SMB2 negotiate, NTLM authentication hashes |
+| **MySQL** | 3306 | Login credentials, SQL queries (v10 handshake protocol) |
+| **Telnet** | 2323 | Login prompts, interactive commands, shell session history |
+| **SMTP** | 25 | AUTH LOGIN/PLAIN credentials, MAIL FROM/RCPT TO/DATA (RFC 5321) |
+| **MongoDB** | 27017 | SASL auth, isMaster, listDatabases (OP_QUERY + OP_MSG wire protocol) |
+| **VNC** | 5900 | DES challenge/response auth capture (RFB 3.8) |
+| **Redis** | 6379 | AUTH passwords, INFO/KEYS recon, CONFIG SET/SLAVEOF abuse (RESP protocol) |
+| **ADB** | 5555 | Shell commands, auth tokens/keys, device enumeration (binary protocol) |
+| **Elasticsearch** | 9200 | `_search` data theft, `_bulk` injection, `_scripts` RCE, `_snapshot` exfil attempts |
+| **Kubernetes** | 6443 | Pod creation specs, secret reads (honey AWS keys), exec RCE, namespace enumeration |
+| **MQTT** | 1883 | CONNECT credentials, SUBSCRIBE topics, PUBLISH payloads with QoS (v3.1.1) |
+
+Every service emulates its protocol at the wire level with realistic responses to keep attackers engaged.
+
+---
+
+## Dashboard
+
+<details>
+<summary><b>Events</b> — Filterable log with clickable IPs across all 14 services</summary>
+<br>
+<img src="screenshots/02_events.png" alt="Events" width="100%">
+</details>
+
+<details>
+<summary><b>Sessions</b> — All connections with color-coded service badges</summary>
+<br>
+<img src="screenshots/03_sessions.png" alt="Sessions" width="100%">
+</details>
+
+<details>
+<summary><b>Alerts</b> — Severity-based threat alerts with acknowledgment and drill-down</summary>
+<br>
+<img src="screenshots/04_alerts.png" alt="Alerts" width="100%">
+</details>
+
+<details>
+<summary><b>Database</b> — Advanced search with filters, date range, and JSON export</summary>
+<br>
+<img src="screenshots/05_database.png" alt="Database" width="100%">
+</details>
+
+<details>
+<summary><b>Attack Map</b> — Geolocation of attack origins via ip-api.com</summary>
+<br>
+<img src="screenshots/06_map.png" alt="Map" width="100%">
+</details>
+
+<details>
+<summary><b>Config</b> — Per-service settings, 79 banner presets, global config, save/export</summary>
+<br>
+<img src="screenshots/07_config.png" alt="Config" width="100%">
+</details>
+
+<details>
+<summary><b>Firewall</b> — Block/unblock attacker IPs via iptables</summary>
+<br>
+<img src="screenshots/09_firewall.png" alt="Firewall" width="100%">
+</details>
+
+---
+
+## Deployment Profiles
+
+Profiles are YAML files that control which services run and on which ports.
+
+| Profile | Services | Use Case |
+|:--------|:---------|:---------|
+| **`profiles/default.yaml`** | All 14 | Full deployment, maximum coverage |
+| **`profiles/minimal.yaml`** | SSH + Docker | Lightweight, low-resource environments |
+| **`profiles/database_trap.yaml`** | MySQL, MongoDB, Redis, FTP, SMB | Database-focused threat capture |
 
 ```bash
-python main.py stats
-python main.py stats --db /path/to/honeypot.db
+python main.py --headless --config profiles/minimal.yaml
 ```
+
+Create your own by copying any profile and editing the YAML — each service has `enabled`, `port`, `banner`, and protocol-specific extras (hostnames, credentials, databases).
 
 ---
 
-## Profiles
+## API Reference
 
-Profiles are YAML files that control which services are enabled and on which ports.
-
-**`default.yaml`** — All 14 services enabled with standard banners:
-
-```yaml
-ssh:
-  enabled: true
-  port: 2222
-  banner: "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6"
-docker:
-  enabled: true
-  port: 2375
-mysql:
-  enabled: true
-  port: 3306
-  banner: "5.7.42-0ubuntu0.18.04.1"
-# ... all 14 services
-```
-
-**`minimal.yaml`** — SSH + Docker only (lightweight):
-
-```yaml
-ssh:
-  enabled: true
-  port: 2222
-docker:
-  enabled: true
-  port: 2375
-# all other services: enabled: false
-```
-
-**`database_trap.yaml`** — Databases + file services:
-
-```yaml
-mysql:
-  enabled: true
-  port: 3306
-mongodb:
-  enabled: true
-  port: 27017
-redis:
-  enabled: true
-  port: 6379
-ftp:
-  enabled: true
-  port: 2121
-smb:
-  enabled: true
-  port: 4450
-```
-
----
-
-## Dashboard API
-
-The dashboard exposes a REST API on the same port:
+All endpoints require authentication (cookie, `Authorization: Bearer <token>`, or WebSocket `?token=`).
 
 | Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/stats` | GET | Aggregate statistics (events, sessions, IPs, alerts) |
-| `/api/events` | GET | Event log with filters (`service`, `type`, `ip`, `limit`) |
-| `/api/sessions` | GET | Session list with filters (`service`, `ip`, `limit`) |
-| `/api/alerts` | GET | Alerts with severity/status filters |
+|:---------|:-------|:------------|
+| `/api/auth` | POST | Login with username/password |
+| `/api/stats` | GET | Aggregate statistics |
+| `/api/events` | GET | Events (filterable: `service`, `type`, `ip`, `limit`) |
+| `/api/sessions` | GET | Sessions (filterable: `service`, `ip`, `limit`) |
+| `/api/sessions/<id>/events` | GET | Events for a specific session |
+| `/api/alerts` | GET | Alerts (filterable: severity, status) |
 | `/api/alerts/<id>/ack` | POST | Acknowledge an alert |
 | `/api/geo/<ip>` | GET | GeoIP lookup |
-| `/api/map` | GET | Map data with coordinates |
-| `/api/config` | GET | Current service configuration |
-| `/api/config/full` | GET | Config + extra schemas + banner presets for UI |
-| `/api/config/global` | PUT | Update global settings (alerts, log level) |
+| `/api/map` | GET | Map coordinates for all source IPs |
+| `/api/attackers` | GET | Unique attacker IPs with event counts |
+| `/api/ips` | GET | All unique source IPs |
+| `/api/payload-stats` | GET | Payload detection analytics and IOC summary |
+| `/api/firewall/blocked` | GET | Currently blocked IPs |
+| `/api/firewall/block` | POST | Block IP via iptables `{"ip": "x.x.x.x"}` |
+| `/api/firewall/unblock` | POST | Unblock IP `{"ip": "x.x.x.x"}` |
+| `/api/config` | GET | Running service configuration |
+| `/api/config/full` | GET | Config + schemas + banner presets |
+| `/api/config/service/<name>` | PUT | Update a service's configuration |
+| `/api/config/global` | PUT | Update global settings |
 | `/api/config/save` | POST | Persist running config to YAML |
 | `/api/config/export` | GET | Download config as YAML file |
-| `/api/ips` | GET | Unique source IPs |
-| `/api/firewall/blocked` | GET | List currently blocked IPs |
-| `/api/firewall/block` | POST | Block an IP via iptables (`{"ip": "x.x.x.x"}`) |
-| `/api/firewall/unblock` | POST | Unblock an IP (`{"ip": "x.x.x.x"}`) |
-| `/api/payload-stats` | GET | Payload intel — severity counts, pattern frequency, IOC totals, timeline |
-| `/api/database/reset` | POST | Reset the database |
-| `/ws` | WebSocket | Real-time event stream |
+| `/api/export` | GET | Full JSON export (events, sessions, alerts) |
+| `/api/database/reset` | POST | Clear all captured data |
+| `/ws` | WebSocket | Real-time event and alert stream |
 
 ---
 
 ## Testing
 
-The included endpoint tester generates traffic across all 14 services and validates every dashboard API endpoint:
+The included endpoint tester probes all 14 services and validates every API endpoint:
 
 ```bash
-python test_endpoints.py
+python test_endpoints.py                     # localhost defaults
+python test_endpoints.py --host 10.0.0.5     # remote host
+python test_endpoints.py --skip-services     # dashboard API only
 ```
 
 ```
@@ -275,12 +267,10 @@ Target: 127.0.0.1
   [PASS] SMB        negotiate response=133b
   [PASS] Telnet     banner received
   [PASS] SMTP       banner: 220 mail.example.com ESMTP Postfix (Ubuntu)
-  [PASS] SMTP AUTH  auth: 235 2.7.0 Authentication successful
   [PASS] MongoDB    isMaster resp=186b, listDatabases resp=315b
   [PASS] VNC        version: RFB 003.008, auth_ok=True
   [PASS] Redis      ping: +PONG, auth: +OK
   [PASS] ADB        device: Pixel 7
-  [PASS] ADB shell  uid=0(root) gid=0(root)
   [PASS] Elastic    cluster: elasticsearch, version: 8.12.0
   [PASS] K8s        /version: v1.28.2, /api/v1: 200
   [PASS] MQTT       CONNACK received, session established
@@ -293,46 +283,39 @@ Target: 127.0.0.1
 ## Architecture
 
 ```
-main.py                  # Entry point
-honeypot/
-├── __init__.py          # Package metadata
-├── __main__.py          # Module entry point
-├── cli.py               # Interactive CLI (questionary), headless mode, banner
-├── config.py            # YAML config loading, service extra schemas, banner presets
-├── core.py              # HoneypotOrchestrator — lifecycle, live config updates
-├── database.py          # Async SQLite with pub/sub for WebSocket
-├── models.py            # EventType enum, ServiceType enum
-├── alerts.py            # Alert engine (severity rules, webhook support)
-├── dashboard/
-│   ├── server.py        # aiohttp web server + REST API + WebSocket
-│   └── templates.py     # Single-file HTML/CSS/JS dashboard
-├── services/
-│   ├── __init__.py      # BaseHoneypotService ABC
-│   ├── ssh.py           # SSH (Paramiko)
-│   ├── docker.py        # Docker Engine API
-│   ├── ftp.py           # FTP
-│   ├── smb.py           # SMB/CIFS
-│   ├── mysql.py         # MySQL
-│   ├── telnet.py        # Telnet
-│   ├── smtp.py          # SMTP
-│   ├── mongodb.py       # MongoDB (custom BSON codec)
-│   ├── vnc.py           # VNC/RFB
-│   ├── redis.py         # Redis (RESP protocol)
-│   ├── adb.py           # Android Debug Bridge
-│   ├── elasticsearch.py # Elasticsearch (REST API)
-│   ├── kubernetes.py    # Kubernetes API Server
-│   └── mqtt.py          # MQTT Broker (v3.1.1)
-profiles/
-├── default.yaml         # All services
-├── minimal.yaml         # SSH + Docker
-└── database_trap.yaml   # Database services
+main.py → honeypot/cli.py → honeypot/core.py (HoneypotOrchestrator)
+                                  │
+                  ┌───────────────┼───────────────┐
+                  │               │               │
+            14 Services      Dashboard       Alert Engine
+          (async TCP)     (aiohttp REST     (50+ patterns,
+                           + WebSocket)     webhook dispatch)
+                  │               │               │
+                  └───────┬───────┘               │
+                          │                       │
+                    Database (SQLite)  ◄───────────┘
+                          │
+                   GeoLocator (ip-api.com, cached)
 ```
 
-Each service extends `BaseHoneypotService` and implements:
+```
+honeypot/
+├── cli.py              # Interactive setup, arg parsing, logging
+├── config.py           # YAML loading, service schemas, 79 banner presets
+├── core.py             # Orchestrator — wires components, manages lifecycle
+├── database.py         # Async SQLite (WAL), pub/sub for WebSocket broadcast
+├── models.py           # EventType, ServiceType, AlertSeverity, dataclasses
+├── alerts.py           # 50+ detection rules, IOC extraction, webhooks
+├── geo.py              # IP geolocation with cache + rate limiting
+├── dashboard/
+│   ├── server.py       # aiohttp REST API (40+ endpoints) + WebSocket
+│   └── templates.py    # Single-file HTML/CSS/JS dashboard (SPA)
+└── services/
+    ├── __init__.py     # BaseHoneypotService ABC
+    └── *.py            # 14 protocol implementations
+```
 
-- `async start()` — bind to port and begin accepting connections
-- `async _handle_client()` — protocol-specific interaction loop
-- `_create_session()` / `_log()` / `_end_session()` — event pipeline to SQLite + WebSocket
+Each service extends `BaseHoneypotService` — implementing `_handle_client()` for protocol interaction and using `_log()` to push events through the pipeline (SQLite storage → alert engine → WebSocket broadcast).
 
 ---
 
